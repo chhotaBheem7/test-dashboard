@@ -7,11 +7,11 @@ import pandas as pd
 import mysql.connector
 import config
 
-# Load the data
-DB_HOST = config.DB_HOST
-DB_USER = config.DB_USER
-DB_PASSWORD = config.DB_PASSWORD
-DB_NAME = config.DB_NAME
+# Load the data from environment variables
+DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
 
 conn = None  # Initialize conn *outside* the try block
 
