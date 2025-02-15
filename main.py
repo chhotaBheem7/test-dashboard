@@ -12,11 +12,20 @@ DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
+INSTANCE_CONNECTION_NAME = os.getenv("INSTANCE_CONNECTION_NAME")
+
+# Use the Unix socket provided by Cloud SQL Proxy
+unix_socket = f"/cloudsql/{INSTANCE_CONNECTION_NAME}"
 
 conn = None  # Initialize conn *outside* the try block
 
 try:
-    conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
+    conn = mysql.connector.connect(
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        unix_socket=unix_socket
+    )
     cursor = conn.cursor()
 
     query = """
