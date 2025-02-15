@@ -119,7 +119,7 @@ html.Div(className="container-fluid", children=[
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
                     dbc.CardBody(children=[
-                        html.H5("👶 Average number of Pregnancies",  className="card-title", style={'filter': 'grayscale(100%)'}),
+                        html.H5("👶 Average number Of Pregnancies",  className="card-title", style={'filter': 'grayscale(100%)'}),
                         html.P(average_pregnancies, className="card-text", style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
                     ])
                 ], style={"height": "100%"})
