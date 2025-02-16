@@ -196,7 +196,6 @@ app.layout = html.Div(children=[
 html.Div(className="container-fluid", children=[
     html.H1(children="Diagnosis of Diabetes Dashboard", className="p-5 rounded-lg shadow",
             style={"background-color": '#d4652e', "margin-bottom": "20px", "color": "white"}),
-
         html.Div(className="row card-container",  children=[
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
@@ -337,33 +336,59 @@ html.Div(className="container-fluid", children=[
          html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                     dbc.CardBody(children=[
-html.H2("Input Form"),
-    dbc.Form([
-        dbc.CardGroup([
-            dbc.Label("Feature 1", html_for="feature1"),
-            dcc.Input(type="text", id="feature1", className="form-control", placeholder="Enter Feature 1"),
-        ]),
-        dbc.CardGroup([
-            dbc.Label("Feature 2", html_for="feature2"),
-            dcc.Input(type="text", id="feature2", className="form-control", placeholder="Enter Feature 2"),
-        ]),
-        dbc.CardGroup([
-            dbc.Label("Feature 3", html_for="feature3"),
-            dcc.Input(type="text", id="feature3", className="form-control", placeholder="Enter Feature 3"),
-        ]),
-        dbc.CardGroup([
-            dbc.Label("Feature 4", html_for="feature4"),
-            dcc.Input(type="text", id="feature4", className="form-control", placeholder="Enter Feature 4"),
-        ]),
-        dbc.Button("Submit", color="primary", id="submit-button", n_clicks=0),
-    ]),
+html.H2("Diabetes risk factors"),
+                        dbc.Form(
+                            [
+                                dbc.CardGroup(
+                                    [
+                                        dbc.Label("Age", html_for="Age", className="form-label fw-bold"),
+                                        # fw-bold for bold
+                                        dcc.Input(
+                                            type="text",
+                                            id="Age",
+                                            className="form-control input-with-border",
+                                            placeholder="Enter Age",
+                                        ),
+                                    ],
+                                    className="mb-3",
+                                    style={"width": "30%"},
+                                ),
+                                dbc.CardGroup(
+                                    [
+                                        dbc.Label("BMI", html_for="BMI", className="form-label fw-bold"),
+                                        dcc.Input(
+                                            type="text",
+                                            id="BMI",
+                                            className="form-control input-with-border",
+                                            placeholder="Enter BMI",
+                                        ),
+                                    ],
+                                    className="mb-3",  # Add margin-bottom for spacing
+                                    style={"width": "30%"},  # Set width to 30%
+                                ),
+                                dbc.CardGroup(
+                                    [
+                                        dbc.Label("Glucose level", html_for="Glucose", className="form-label fw-bold"),
+                                        dcc.Input(
+                                            type="text",
+                                            id="Glucose",
+                                            className="form-control input-with-border",
+                                            placeholder="Enter Glucose level",
+                                        ),
+                                    ],
+                                    className="mb-3",  # Add margin-bottom for spacing
+                                    style={"width": "30%"},  # Set width to 30%
+                                ),
+                                dbc.Button("Submit", color="secondary", id="submit-button", n_clicks=0),
+                            ]
+                        ),
     html.Div(id="output-area"),  # To display output (optional)
                     ])
                 ], style={"height": "100%"})
         ]),
     ], style={"padding-bottom": "10px"}),
 ]),
-])
+]),
 
 
 @app.callback(
