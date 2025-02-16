@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
 import mysql.connector
-import config
+import logistic_regression_model
 
 # Load the data from environment variables
 DB_HOST = os.getenv("DB_HOST")
@@ -50,6 +50,17 @@ finally:
         conn.close()
 
 
+df_cm = logistic_regression_model.df_cm
+
+class_report = logistic_regression_model.class_rep
+
+accuracy = logistic_regression_model.accuracy
+
+percentage = accuracy * 100
+remaining = 100 - percentage
+
+fig7_accuracy = {'Category': ['Accuracy', 'Remaining'], 'Value': [percentage, remaining]}
+
 # Calculate the average number of pregnancies
 average_pregnancies = round(df['Pregnancies'].mean(), 2)
 
@@ -87,10 +98,11 @@ age_counts = df_new['Age'].value_counts().sort_index()
 
 df['Outcome'] = df['Outcome'].astype('category')
 
+# Create the custom color scale for heatmap\matrix
+custom_colorscale = px.colors.make_colorscale(['#ea8c55', '#ea526f'])
+
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
-server = app.server
 
 # Initial figures and dropdown options (handle empty DataFrame)
 initial_x = df_new.columns[0] if not df_new.empty and len(df_new.columns) > 0 else None
@@ -98,15 +110,31 @@ initial_y = df_new.columns[1] if not df_new.empty and len(df_new.columns) > 1 el
 
 fig1 = px.pie(outcome_counts, names='Outcome', values='Count', title='Binary Feature Outcome',
               color="Outcome", color_discrete_sequence=['#ea8c55', '#ea526f'])
+
 fig2 = px.scatter(df_new, x=initial_x, y=initial_y, title='Scatter-chart',
                   color_discrete_sequence=['#ea8c55', '#ea526f'])
+
 fig3 = px.box(df_new, x=initial_x, title='Number of pregnancies',
               color_discrete_sequence=['#ea8c55', '#ea526f'])
+
 fig4 = px.bar(zeros_df, x='Features', y='Number of Zeros', title='Number of Zeros per Feature',
               color_discrete_sequence=['#ea8c55', '#ea526f'])
+
 fig5 = px.violin(df, x="Outcome", y="Age", color="Outcome", box=True, points="all",
-              title="Age Distribution by Diabetes Outcome",
-              color_discrete_sequence=['#ea8c55', '#ea526f'])
+                 title="Age Distribution by Diabetes Outcome",
+                 color_discrete_sequence=['#ea8c55', '#ea526f'])
+
+fig6 = px.imshow(df_cm, labels=dict(x="Predicted", y="Actual", color="Count"), x=df_cm.columns, y=df_cm.index,
+                 color_continuous_scale=custom_colorscale, text_auto=True)
+fig6.update_layout(title="Confusion Matrix", xaxis_title="Predicted", yaxis_title="Actual", xaxis=dict(tickangle=-45),
+    yaxis=dict(tickangle=0), coloraxis_showscale=False)
+
+fig7 = px.pie(fig7_accuracy, values='Value', names='Category', title=f'Accuracy',
+              color_discrete_sequence=['#ea8c55', '#ea526f'], hole=0.6)
+fig7.update_layout(showlegend=False)
+fig7.update_traces(textinfo='none')
+fig7.add_annotation(text=f"<b>{percentage:.1f}%</b>", x=0.5, y=0.5, font=dict(size=28, family="Arial",
+                    color="black"), showarrow=False)
 
 dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if not df_new.empty else []
 
@@ -178,14 +206,26 @@ html.Div(className="container-fluid", children=[
         html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                 dbc.CardBody(children=[
-                    dcc.Graph(figure=fig4),
+                    dcc.Graph(figure=fig5),
                 ])
             ], style={"height": "100%"})
         ]),
         html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                 dbc.CardBody(children=[
-                    dcc.Graph(figure=fig5),
+                    dcc.Graph(id='scatter-chart', figure=fig2),
+                    dcc.Dropdown(
+                        id='x-axis-dropdown2',
+                        options=dropdown_options,
+                        value=initial_x,
+                        clearable=False
+                    ),
+                    dcc.Dropdown(
+                        id='y-axis-dropdown2',
+                        options=dropdown_options,
+                        value=initial_y,
+                        clearable=False
+                    ),
                 ])
             ], style={"height": "100%"})
         ]),
@@ -203,44 +243,53 @@ html.Div(className="container-fluid", children=[
             ], style={"height": "100%"})
         ]),
     ], style={"padding-bottom": "10px"}),
-html.Div(className="row card-container", children=[
-        html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
-                    dbc.CardBody(children=[
-                        dcc.Graph(id='scatter-chart', figure=fig2),
-                        dcc.Dropdown(
-                        id='x-axis-dropdown2',
-                        options=dropdown_options,
-                        value=initial_x,
-                        clearable=False
-                        ),
-                        dcc.Dropdown(
-                        id='y-axis-dropdown2',
-                        options=dropdown_options,
-                        value=initial_y,
-                        clearable=False
-                    ),
+         html.Div(className="row card-container", children=[
+         html.Div(className="col-md-3", children=[
+                dbc.Card(children=[
+                 dbc.CardBody(children=[
+                    dcc.Graph(figure=fig6),
                 ])
-            ], style={"height": "100%"})
+                   ], style={"height": "100%"})
         ]),
-        html.Div(className="col-md-3", children=[
+         html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                 dbc.CardBody(children=[
-
+                    dcc.Graph(figure=fig7),
                 ])
-            ], style={"height": "100%"})
-        ]),
-        html.Div(className="col-md-3", children=[
+                   ], style={"height": "100%"})
+         ]),
+         html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                 dbc.CardBody(children=[
-
+                                html.H5("Logistic Regression model Performance Summary", className="card-title"),
+                                html.Pre(class_report, style={"height": "100%", "padding-top": "40px", "padding-left": "30px", 'text-indent': '10px', 'font-size': '16px', 'font-weight': 'bold'})
                 ])
-            ], style={"height": "100%"})
+            ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px', 'font-size': '20px', 'font-weight': 'bold'})
         ]),
-        html.Div(className="col-md-3", children=[
+         html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                     dbc.CardBody(children=[
-
+html.H2("Input Form"),
+    dbc.Form([
+        dbc.CardGroup([
+            dbc.Label("Feature 1", html_for="feature1"),
+            dcc.Input(type="text", id="feature1", className="form-control", placeholder="Enter Feature 1"),
+        ]),
+        dbc.CardGroup([
+            dbc.Label("Feature 2", html_for="feature2"),
+            dcc.Input(type="text", id="feature2", className="form-control", placeholder="Enter Feature 2"),
+        ]),
+        dbc.CardGroup([
+            dbc.Label("Feature 3", html_for="feature3"),
+            dcc.Input(type="text", id="feature3", className="form-control", placeholder="Enter Feature 3"),
+        ]),
+        dbc.CardGroup([
+            dbc.Label("Feature 4", html_for="feature4"),
+            dcc.Input(type="text", id="feature4", className="form-control", placeholder="Enter Feature 4"),
+        ]),
+        dbc.Button("Submit", color="primary", id="submit-button", n_clicks=0),
+    ]),
+    html.Div(id="output-area"),  # To display output (optional)
                     ])
                 ], style={"height": "100%"})
         ]),
@@ -271,6 +320,23 @@ def update_scatter_chart(x_value, y_value):
         fig.update_layout(title=f"{x_value} vs {y_value}")
         return fig
     return {}
+
+@app.callback(
+    Output("output-area", "children"),  # Output to the output area
+    Input("submit-button", "n_clicks"),  # Triggered by button clicks
+    State("feature1", "value"),  # Get current values of inputs
+    State("feature2", "value"),
+    State("feature3", "value"),
+    State("feature4", "value"),
+)
+def update_output(n_clicks, feature1, feature2, feature3, feature4):
+    if n_clicks > 0:  # Only update on button click
+        # Here you would typically process the data (e.g., send it to a server, store it, etc.)
+        # For this example, we'll just display the entered values:
+        output_text = f"Feature 1: {feature1}, Feature 2: {feature2}, Feature 3: {feature3}, Feature 4: {feature4}"
+        return output_text
+    return ""  # Return empty string initially
+
 
 if __name__ == '__main__':
     # Get the port number from the environment variable PORT (default to 8050 for local development)
