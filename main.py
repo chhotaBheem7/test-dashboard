@@ -417,19 +417,21 @@ def update_scatter_chart(x_value, y_value):
     return {}
 
 
+# Callback to calculate the probability for patient to have diabetes
 @app.callback(
     Output("output-area", "children"),  # Output to the output area
     Input("submit-button", "n_clicks"),  # Triggered by button clicks
-    State("feature1", "value"),  # Get current values of inputs
-    State("feature2", "value"),
-    State("feature3", "value"),
-    State("feature4", "value"),
+    State("Age", "value"),  # Get current values of inputs
+    State("BMI", "value"),
+    State("Glucose", "value"),
 )
-def update_output(n_clicks, feature1, feature2, feature3, feature4):
+def update_output(n_clicks, Age, BMI, Glucose):
     if n_clicks > 0:  # Only update on button click
-        # Here you would typically process the data (e.g., send it to a server, store it, etc.)
-        # For this example, we'll just display the entered values:
-        output_text = f"Feature 1: {feature1}, Feature 2: {feature2}, Feature 3: {feature3}, Feature 4: {feature4}"
+        new_data = np.array([[Age, BMI, Glucose]])
+        new_data_scaled = scaler.transform(new_data)
+        prediction = model.predict(new_data_scaled)
+        output_text = (f"If the prediction is 0 the patient does not have diabetes {prediction},"
+                       f" if 1 the patient should examined for diabetes.")
         return output_text
     return ""  # Return empty string initially
 
