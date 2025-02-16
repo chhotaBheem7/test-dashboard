@@ -321,76 +321,97 @@ html.Div(className="container-fluid", children=[
                 ])
                    ], style={"height": "100%"})
          ]),
-         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
-                dbc.CardBody(children=[
-                                html.H5("Logistic Regression model Performance Summary",
-                                        className="card-title"),
-                                html.Pre(class_report, style={"height": "100%", "padding-top": "40px",
-                                                              "padding-left": "30px", 'text-indent': '10px',
-                                                              'font-size': '16px', 'font-weight': 'bold'})
-                ])
-            ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px',
-                      'font-size': '20px', 'font-weight': 'bold'})
-        ]),
-         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
-                    dbc.CardBody(children=[
-html.H2("Diabetes risk factors"),
-                        dbc.Form(
-                            [
-                                dbc.CardGroup(
-                                    [
-                                        dbc.Label("Age", html_for="Age", className="form-label fw-bold"),
-                                        # fw-bold for bold
-                                        dcc.Input(
-                                            type="text",
-                                            id="Age",
-                                            className="form-control input-with-border",
-                                            placeholder="Enter Age",
-                                        ),
-                                    ],
-                                    className="mb-3",
-                                    style={"width": "30%"},
-                                ),
-                                dbc.CardGroup(
-                                    [
-                                        dbc.Label("BMI", html_for="BMI", className="form-label fw-bold"),
-                                        dcc.Input(
-                                            type="text",
-                                            id="BMI",
-                                            className="form-control input-with-border",
-                                            placeholder="Enter BMI",
-                                        ),
-                                    ],
-                                    className="mb-3",  # Add margin-bottom for spacing
-                                    style={"width": "30%"},  # Set width to 30%
-                                ),
-                                dbc.CardGroup(
-                                    [
-                                        dbc.Label("Glucose level", html_for="Glucose", className="form-label fw-bold"),
-                                        dcc.Input(
-                                            type="text",
-                                            id="Glucose",
-                                            className="form-control input-with-border",
-                                            placeholder="Enter Glucose level",
-                                        ),
-                                    ],
-                                    className="mb-3",  # Add margin-bottom for spacing
-                                    style={"width": "30%"},  # Set width to 30%
-                                ),
-                                dbc.Button("Submit", color="secondary", id="submit-button", n_clicks=0),
-                            ]
-                        ),
-    html.Div(id="output-area"),  # To display output (optional)
-                    ])
-                ], style={"height": "100%"})
-        ]),
-    ], style={"padding-bottom": "10px"}),
+             html.Div(className="col-md-3", children=[
+                 dbc.Card(children=[
+                     dbc.CardBody(children=[
+                         html.H5("Logistic Regression model Performance Summary",
+                                 className="card-title"),
+                         html.Pre(class_report, style={"height": "100%", "padding-top": "40px",
+                                                       "padding-left": "30px", 'text-indent': '10px',
+                                                       'font-size': '16px', 'font-weight': 'bold'})
+                     ])
+                 ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px',
+                           'font-size': '20px', 'font-weight': 'bold'})
+             ]),
+             html.Div(className="col-md-2", children=[
+                 dbc.Card(children=[
+                     dbc.CardBody(children=[
+                         html.Div(className="card-body", children=[
+                             html.H5("Diabetes risk factors"),
+                             dbc.Form([
+                                 dbc.CardGroup(
+                                     [
+                                         dbc.Label("Age", html_for="Age", className="form-label fw-bold"),
+                                         # fw-bold for bold
+                                         dcc.Input(
+                                             type="text",
+                                             id="Age",
+                                             className="form-control input-with-border",
+                                             placeholder="Enter Age",
+                                         ),
+                                     ],
+                                     className="mb-3",
+                                     style={"width": "80%"},
+                                 ),
+                                 dbc.CardGroup(
+                                     [
+                                         dbc.Label("BMI", html_for="BMI", className="form-label fw-bold"),
+                                         dcc.Input(
+                                             type="text",
+                                             id="BMI",
+                                             className="form-control input-with-border",
+                                             placeholder="Enter BMI",
+                                         ),
+                                     ],
+                                     className="mb-3",  # Add margin-bottom for spacing
+                                     style={"width": "80%"},  # Set width to 30%
+                                 ),
+                                 dbc.CardGroup(
+                                     [
+                                         dbc.Label("Glucose level", html_for="Glucose",
+                                                   className="form-label fw-bold"),
+                                         dcc.Input(
+                                             type="text",
+                                             id="Glucose",
+                                             className="form-control input-with-border",
+                                             placeholder="Enter Glucose level",
+                                         ),
+                                     ],
+                                     className="mb-3",  # Add margin-bottom for spacing
+                                     style={"width": "80%"},  # Set width to 30%
+                                 ),
+                                 dbc.Button("Submit", color="secondary", id="submit-button", n_clicks=0),
+                             ]),
+                         ]),
+                     ])
+                 ], style={"height": "100%", "width": "80%"})
+
+             ]),
+
+             html.Div(className="col-md-1", children=[
+                 dbc.Card(children=[
+                     dbc.CardBody(children=[
+                         html.Div(className="card-body", children=[
+                             html.H5("Diabetes Risk Prediction"),
+                             html.P("A score of 0: Low risk.",
+                                    style={"font-weight": "bold", "font-size": "16px"}),
+                             html.P("A score of 1 suggests further evaluation",
+                                    style={"font-weight": "bold", "font-size": "16px"}),
+                             html.Br(),
+                         ]),
+                         html.Div(id="output-text",
+                                  style={"font-weight": "bold", "font-size": "70px", "text-align": "center"}),
+                         # To display output
+                     ])
+                 ], style={"height": "100%", "width": "142%", "margin-left": "-80px"})
+
+             ]),
+         ], style={"padding-bottom": "10px"}),
 ]),
 ]),
 
 
+# Callback to update the scatter boxplot
 @app.callback(
     Output('boxplot', 'figure'),
     Input('x-axis-dropdown1', 'value')
@@ -419,19 +440,18 @@ def update_scatter_chart(x_value, y_value):
 
 # Callback to calculate the probability for patient to have diabetes
 @app.callback(
-    Output("output-area", "children"),  # Output to the output area
+    Output("output-text", "children"),  # Output to the output area
     Input("submit-button", "n_clicks"),  # Triggered by button clicks
     State("Age", "value"),  # Get current values of inputs
     State("BMI", "value"),
     State("Glucose", "value"),
 )
-def update_output(n_clicks, Age, BMI, Glucose):
+def update_output(n_clicks, age, bmi, glucose):
     if n_clicks > 0:  # Only update on button click
-        new_data = np.array([[Age, BMI, Glucose]])
+        new_data = np.array([[age, bmi, glucose]])
         new_data_scaled = scaler.transform(new_data)
         prediction = model.predict(new_data_scaled)
-        output_text = (f"If the prediction is 0 the patient does not have diabetes {prediction},"
-                       f" if 1 the patient should examined for diabetes.")
+        output_text = (f"{prediction}")
         return output_text
     return ""  # Return empty string initially
 
