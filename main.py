@@ -1,11 +1,16 @@
-import os
 import dash
-from dash import html, dcc, Input, Output
+from dash import html, dcc, Input, Output, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
 import mysql.connector
-import logistic_regression_model
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import pickle
+import os
 
 # Load the data from environment variables
 DB_HOST = os.getenv("DB_HOST")
@@ -50,11 +55,60 @@ finally:
         conn.close()
 
 
-df_cm = logistic_regression_model.df_cm
+# Logistic Regression Model - Separate features (X) and target (y)
+feature_names = ['Glucose', 'BMI', 'Age']
+X = df[feature_names].values  # All features included in the model
+y = df.iloc[:, -1].values   # The last feature (target)
 
-class_report = logistic_regression_model.class_rep
+# 3. Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y  # 80/20 split
+)
 
-accuracy = logistic_regression_model.accuracy
+# Feature Scaling (Important for Logistic Regression)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)  # Fit and transform training data
+X_test = scaler.transform(X_test)      # Transform test data using the same scaler
+
+# Test whether the pickle exists.
+if os.path.isfile("logistic_regression.mdl"):
+    # If the pickle exists, open it.
+    infile = open("logistic_regression.mdl", 'rb')
+    # Load the pickle.
+    model = pickle.load(infile)
+    # Close the pickle file.
+    infile.close()
+    # Output a message to state that the pickle was
+    # successfully loaded.
+    print("Loaded pickle")
+
+else:
+    # Train the Logistic Regression model
+    model = LogisticRegression(max_iter=1000, solver='liblinear', C=10.0)
+    model.fit(X_train, y_train)
+    # Open a file to save the pickle.
+    outfile = open("logistic_regression.mdl", "wb")
+    # Store the model in the file.
+    pickle.dump(model, outfile)
+    # Close the pickle file.
+    outfile.close()
+
+
+# Make predictions on the test set
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+
+# Classification Report (precision, recall, F1-score)
+class_report = classification_report(y_test, y_pred)
+
+# Calculate the confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+
+class_names = np.unique(y_test)  # Or specify manually
+
+df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
 
 percentage = accuracy * 100
 remaining = 100 - percentage
@@ -147,32 +201,40 @@ html.Div(className="container-fluid", children=[
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
                     dbc.CardBody(children=[
-                        html.H5("👶 Average number of Pregnancies",  className="card-title", style={'filter': 'grayscale(100%)'}),
-                        html.P(average_pregnancies, className="card-text", style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
+                        html.H5("👶 Average number of Pregnancies",  className="card-title",
+                                style={'filter': 'grayscale(100%)'}),
+                        html.P(average_pregnancies, className="card-text",
+                               style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
                     ])
                 ], style={"height": "100%"})
             ]),
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
                     dbc.CardBody(children=[
-                        html.H5("🧪 Average Glucose level", className="card-title", style={'filter': 'grayscale(100%)'}),
-                        html.P(average_glucose, className="card-text", style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
+                        html.H5("🧪 Average Glucose level", className="card-title",
+                                style={'filter': 'grayscale(100%)'}),
+                        html.P(average_glucose, className="card-text",
+                               style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
                     ])
                 ], style={"height": "100%"})
             ]),
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
                     dbc.CardBody(children=[
-                        html.H5("❤ Average Blood Pressure level", className="card-title", style={'filter': 'grayscale(100%)'}),
-                        html.P(average_bloodpressure, className="card-text", style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
+                        html.H5("❤ Average Blood Pressure level", className="card-title",
+                                style={'filter': 'grayscale(100%)'}),
+                        html.P(average_bloodpressure, className="card-text",
+                               style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
                     ])
                 ], style={"height": "100%"})
             ]),
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
                     dbc.CardBody(children=[
-                        html.H5("🧪 Average Insulin level", className="card-title", style={'filter': 'grayscale(100%)'}),
-                        html.P(average_insulin, className="card-text", style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
+                        html.H5("🧪 Average Insulin level", className="card-title",
+                                style={'filter': 'grayscale(100%)'}),
+                        html.P(average_insulin, className="card-text",
+                               style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
                     ])
                 ], style={"height": "100%"})
             ]),
@@ -180,7 +242,8 @@ html.Div(className="container-fluid", children=[
                 dbc.Card(children=[
                     dbc.CardBody(children=[
                         html.H5("💪 Average BMI", className="card-title", style={'filter': 'grayscale(100%)'}),
-                        html.P(average_bmi, className="card-text", style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
+                        html.P(average_bmi, className="card-text", style={'text-indent': '33px', 'font-size': '18px',
+                                                                          'font-weight': 'bold'}),
                     ])
                 ], style={"height": "100%"})
             ]),
@@ -188,7 +251,8 @@ html.Div(className="container-fluid", children=[
                 dbc.Card(children=[
                     dbc.CardBody(children=[
                         html.H5("⌛ Average Age", className="card-title", style={'filter': 'grayscale(100%)'}),
-                        html.P(average_age, className="card-text", style={'text-indent': '33px', 'font-size': '18px', 'font-weight': 'bold'}),
+                        html.P(average_age, className="card-text", style={'text-indent': '33px', 'font-size': '18px',
+                                                                          'font-weight': 'bold'}),
                     ])
                 ], style={"height": "100%"})
             ]),
@@ -261,10 +325,14 @@ html.Div(className="container-fluid", children=[
          html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                 dbc.CardBody(children=[
-                                html.H5("Logistic Regression model Performance Summary", className="card-title"),
-                                html.Pre(class_report, style={"height": "100%", "padding-top": "40px", "padding-left": "30px", 'text-indent': '10px', 'font-size': '16px', 'font-weight': 'bold'})
+                                html.H5("Logistic Regression model Performance Summary",
+                                        className="card-title"),
+                                html.Pre(class_report, style={"height": "100%", "padding-top": "40px",
+                                                              "padding-left": "30px", 'text-indent': '10px',
+                                                              'font-size': '16px', 'font-weight': 'bold'})
                 ])
-            ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px', 'font-size': '20px', 'font-weight': 'bold'})
+            ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px',
+                      'font-size': '20px', 'font-weight': 'bold'})
         ]),
          html.Div(className="col-md-3", children=[
             dbc.Card(children=[
@@ -297,6 +365,7 @@ html.H2("Input Form"),
 ]),
 ])
 
+
 @app.callback(
     Output('boxplot', 'figure'),
     Input('x-axis-dropdown1', 'value')
@@ -307,6 +376,7 @@ def update_boxplot(x_value):
         fig.update_layout(title=f"{x_value}")
         return fig
     return {}
+
 
 # Callback to update the scatter plot
 @app.callback(
@@ -320,6 +390,7 @@ def update_scatter_chart(x_value, y_value):
         fig.update_layout(title=f"{x_value} vs {y_value}")
         return fig
     return {}
+
 
 @app.callback(
     Output("output-area", "children"),  # Output to the output area
