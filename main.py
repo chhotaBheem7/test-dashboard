@@ -153,7 +153,7 @@ age_counts = df_new['Age'].value_counts().sort_index()
 df['Outcome'] = df['Outcome'].astype('category')
 
 # Create the custom color scale for heatmap\matrix
-custom_colorscale = px.colors.make_colorscale(['#ea8c55', '#ea526f'])
+custom_colorscale = px.colors.make_colorscale(['#0081A7', '#F07167'])
 
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -163,28 +163,28 @@ initial_x = df_new.columns[0] if not df_new.empty and len(df_new.columns) > 0 el
 initial_y = df_new.columns[1] if not df_new.empty and len(df_new.columns) > 1 else None
 
 fig1 = px.pie(outcome_counts, names='Outcome', values='Count', title='Binary Feature Outcome',
-              color="Outcome", color_discrete_sequence=['#ea8c55', '#ea526f'])
+              color="Outcome", color_discrete_sequence=['#0081A7', '#F07167'])
 
 fig2 = px.scatter(df_new, x=initial_x, y=initial_y, title='Scatter-chart',
-                  color_discrete_sequence=['#ea8c55', '#ea526f'])
+                  color_discrete_sequence=['#0081A7', '#F07167'])
 
 fig3 = px.box(df_new, x=initial_x, title='Number of pregnancies',
-              color_discrete_sequence=['#ea8c55', '#ea526f'])
+              color_discrete_sequence=['#0081A7', '#F07167'])
 
 fig4 = px.bar(zeros_df, x='Features', y='Number of Zeros', title='Number of Zeros per Feature',
-              color_discrete_sequence=['#ea8c55', '#ea526f'])
+              color_discrete_sequence=['#0081A7', '#F07167'])
 
 fig5 = px.violin(df, x="Outcome", y="Age", color="Outcome", box=True, points="all",
                  title="Age Distribution by Diabetes Outcome",
-                 color_discrete_sequence=['#ea8c55', '#ea526f'])
+                 color_discrete_sequence=['#0081A7', '#F07167'])
 
 fig6 = px.imshow(df_cm, labels=dict(x="Predicted", y="Actual", color="Count"), x=df_cm.columns, y=df_cm.index,
                  color_continuous_scale=custom_colorscale, text_auto=True)
 fig6.update_layout(title="Confusion Matrix", xaxis_title="Predicted", yaxis_title="Actual", xaxis=dict(tickangle=-45),
-    yaxis=dict(tickangle=0), coloraxis_showscale=False)
+                   yaxis=dict(tickangle=0), coloraxis_showscale=False)
 
 fig7 = px.pie(fig7_accuracy, values='Value', names='Category', title=f'Accuracy',
-              color_discrete_sequence=['#ea8c55', '#ea526f'], hole=0.6)
+              color_discrete_sequence=['#0081A7', '#F07167'], hole=0.6)
 fig7.update_layout(showlegend=False)
 fig7.update_traces(textinfo='none')
 fig7.add_annotation(text=f"<b>{percentage:.1f}%</b>", x=0.5, y=0.5, font=dict(size=28, family="Arial",
@@ -194,8 +194,8 @@ dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if n
 
 app.layout = html.Div(children=[
 html.Div(className="container-fluid", children=[
-    html.H1(children="Diagnosis of Diabetes Dashboard", className="p-5 rounded-lg shadow",
-            style={"background-color": '#d4652e', "margin-bottom": "20px", "color": "white"}),
+    html.H1(children="Pima Indian Diabetes Data Analysis and Prediction Dashboard", className="p-5 rounded-lg shadow",
+            style={"background-color": '#0092BA', "margin-bottom": "20px", "color": "white"}),
         html.Div(className="row card-container",  children=[
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
@@ -321,94 +321,62 @@ html.Div(className="container-fluid", children=[
                 ])
                    ], style={"height": "100%"})
          ]),
-             html.Div(className="col-md-3", children=[
-                 dbc.Card(children=[
-                     dbc.CardBody(children=[
-                         html.H5("Logistic Regression model Performance Summary",
-                                 className="card-title"),
-                         html.Pre(class_report, style={"height": "100%", "padding-top": "40px",
-                                                       "padding-left": "30px", 'text-indent': '10px',
-                                                       'font-size': '16px', 'font-weight': 'bold'})
-                     ])
-                 ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px',
-                           'font-size': '20px', 'font-weight': 'bold'})
-             ]),
-             html.Div(className="col-md-2", children=[
-                 dbc.Card(children=[
-                     dbc.CardBody(children=[
+         html.Div(className="col-md-3", children=[
+            dbc.Card(children=[
+                dbc.CardBody(children=[
+                                html.H5("Logistic Regression model Performance Summary",
+                                        className="card-title"),
+                                html.Pre(class_report, style={"height": "100%", "padding-top": "40px",
+                                                              "padding-left": "30px", 'text-indent': '10px',
+                                                              'font-size': '16px', 'font-weight': 'bold'})
+                ])
+            ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px',
+                      'font-size': '20px', 'font-weight': 'bold'})
+         ]),
+            html.Div(className="col-md-3", children=[
+                dbc.Card(children=[
+                   dbc.CardBody(children=[
+                       html.H5("Diabetes risk factors", style={"margin-top": "22px"}),
+                       dbc.Form([
+                           dbc.Row([  # Row for inputs
+                               dbc.Col(dbc.CardGroup([
+                                   dbc.Label("Age", html_for="Age", className="form-label fw-bold"),
+                                   dcc.Input(type="text", id="Age", className="form-control input-with-border",
+                                             placeholder="Age"),
+                               ]), width=4),  # Adjust width as needed
+                               dbc.Col(dbc.CardGroup([
+                                   dbc.Label("BMI", html_for="BMI", className="form-label fw-bold"),
+                                   dcc.Input(type="text", id="BMI", className="form-control input-with-border",
+                                             placeholder="BMI"),
+                               ]), width=4),  # Adjust width as needed
+                               dbc.Col(dbc.CardGroup([
+                                   dbc.Label("Glucose level", html_for="Glucose", className="form-label fw-bold"),
+                                   dcc.Input(type="text", id="Glucose", className="form-control input-with-border",
+                                             placeholder="Glucose level"),
+                               ]), width=4),  # Adjust width as needed
+                           ]),
+                           dbc.Button("Submit", color="secondary", id="submit-button", n_clicks=0, className="mt-3"),
+                           # Button below, mt-3 adds margin
+                       ]),
+                     dbc.Card(children=[
+                      dbc.CardBody(children=[
                          html.Div(className="card-body", children=[
-                             html.H5("Diabetes risk factors"),
-                             dbc.Form([
-                                 dbc.CardGroup(
-                                     [
-                                         dbc.Label("Age", html_for="Age", className="form-label fw-bold"),
-                                         # fw-bold for bold
-                                         dcc.Input(
-                                             type="text",
-                                             id="Age",
-                                             className="form-control input-with-border",
-                                             placeholder="Enter Age",
-                                         ),
-                                     ],
-                                     className="mb-3",
-                                     style={"width": "80%"},
-                                 ),
-                                 dbc.CardGroup(
-                                     [
-                                         dbc.Label("BMI", html_for="BMI", className="form-label fw-bold"),
-                                         dcc.Input(
-                                             type="text",
-                                             id="BMI",
-                                             className="form-control input-with-border",
-                                             placeholder="Enter BMI",
-                                         ),
-                                     ],
-                                     className="mb-3",  # Add margin-bottom for spacing
-                                     style={"width": "80%"},  # Set width to 30%
-                                 ),
-                                 dbc.CardGroup(
-                                     [
-                                         dbc.Label("Glucose level", html_for="Glucose",
-                                                   className="form-label fw-bold"),
-                                         dcc.Input(
-                                             type="text",
-                                             id="Glucose",
-                                             className="form-control input-with-border",
-                                             placeholder="Enter Glucose level",
-                                         ),
-                                     ],
-                                     className="mb-3",  # Add margin-bottom for spacing
-                                     style={"width": "80%"},  # Set width to 30%
-                                 ),
-                                 dbc.Button("Submit", color="secondary", id="submit-button", n_clicks=0),
-                             ]),
-                         ]),
-                     ])
-                 ], style={"height": "100%", "width": "80%"})
-
-             ]),
-
-             html.Div(className="col-md-1", children=[
-                 dbc.Card(children=[
-                     dbc.CardBody(children=[
-                         html.Div(className="card-body", children=[
-                             html.H5("Diabetes Risk Prediction"),
+                             html.H5("Diabetes Risk Prediction", style={"margin-top": "20px"}),
                              html.P("A score of 0: Low risk.",
                                     style={"font-weight": "bold", "font-size": "16px"}),
                              html.P("A score of 1 suggests further evaluation",
                                     style={"font-weight": "bold", "font-size": "16px"}),
                              html.Br(),
                          ]),
-                         html.Div(id="output-text",
-                                  style={"font-weight": "bold", "font-size": "70px", "text-align": "center"}),
-                         # To display output
+                         html.Div(id="output-text", style={"font-weight": "bold", "font-size": "70px", "text-align": "center"}),  # To display output
                      ])
-                 ], style={"height": "100%", "width": "142%", "margin-left": "-80px"})
-
-             ]),
-         ], style={"padding-bottom": "10px"}),
-]),
-]),
+                   ], style={"height": "100%", "margin-left": "10px", "margin-top": "50px"})
+                ]),
+                ]),
+            ]),
+             ], style={"height": "100%"})
+        ]),
+], style={"padding-bottom": "10px"})
 
 
 # Callback to update the scatter boxplot
