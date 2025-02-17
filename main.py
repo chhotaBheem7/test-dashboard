@@ -328,7 +328,7 @@ html.Div(className="container-fluid", children=[
                                         className="card-title"),
                                 html.Pre(class_report, style={"height": "100%", "padding-top": "40px",
                                                               "padding-left": "30px", 'text-indent': '10px',
-                                                              'font-size': '16px', 'font-weight': 'bold'})
+                                                              'font-size': '80%', 'font-weight': 'bold'})
                 ])
             ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px',
                       'font-size': '20px', 'font-weight': 'bold'})
