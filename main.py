@@ -160,7 +160,7 @@ age_counts = df_new['Age'].value_counts().sort_index()
 df['Outcome'] = df['Outcome'].astype('category')
 
 # Create the custom color scale for heatmap\matrix
-custom_colorscale = px.colors.make_colorscale(['#0081A7', '#c7e8f3', '#F07167', '#FCD757'])
+custom_colorscale = px.colors.make_colorscale(['#0081A7', '#c7e8f3', '#F07167', '#f2c57c'])
 
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -199,8 +199,8 @@ fig8 = px.imshow(
     labels=dict(x="Class", y="Metric", color="Score"),
     x=df_report.index,
     y=['precision', 'recall', 'f1-score'],
-    color_continuous_scale = custom_colorscale,
-    title='Classification Report Heatmap with Numbers'
+    color_continuous_scale=custom_colorscale,
+    title='Classification Report'
 )
 
 # Add annotations (numbers) to the heatmap
