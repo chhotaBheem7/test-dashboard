@@ -93,7 +93,6 @@ else:
     # Close the pickle file.
     outfile.close()
 
-
 # Make predictions on the test set
 y_pred = model.predict(X_test)
 
@@ -386,7 +385,7 @@ html.Div(className="container-fluid", children=[
 )
 def update_boxplot(x_value):
     if x_value and not df.empty:
-        fig = px.box(df, x=x_value, color_discrete_sequence=['#ea8c55', '#ea526f'])
+        fig = px.box(df, x=x_value, color_discrete_sequence=['#0081A7', '#F07167'])
         fig.update_layout(title=f"{x_value}")
         return fig
     return {}
@@ -400,7 +399,7 @@ def update_boxplot(x_value):
 )
 def update_scatter_chart(x_value, y_value):
     if x_value and y_value and not df.empty:
-        fig = px.scatter(df, x=x_value, y=y_value, color_discrete_sequence=['#ea8c55', '#ea526f'])
+        fig = px.scatter(df, x=x_value, y=y_value, color_discrete_sequence=['#0081A7', '#F07167'])
         fig.update_layout(title=f"{x_value} vs {y_value}")
         return fig
     return {}
