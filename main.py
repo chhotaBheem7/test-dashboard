@@ -109,6 +109,21 @@ class_names = np.unique(y_test)  # Or specify manually
 
 df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
 
+report = classification_report(y_test, y_pred, output_dict=True)
+
+df_report = pd.DataFrame(report).transpose()
+df_report = df_report.drop('accuracy', axis=0)
+
+df_melted = df_report.reset_index().melt(
+    id_vars=['index'],
+    value_vars=['precision', 'recall', 'f1-score'],
+    var_name='metric',
+    value_name='value'
+)
+
+# Pivot the DataFrame for the heatmap
+df_pivot = df_melted.pivot(index='metric', columns='index', values='value')
+
 percentage = accuracy * 100
 remaining = 100 - percentage
 
@@ -138,13 +153,6 @@ outcome_counts['Outcome'] = outcome_counts['Outcome'].astype(str)
 
 df_new = df.drop('PatientID', axis=1)
 
-# Count zeros per column
-zeros_per_column = (df_new == 0).sum()
-
-# Convert the Series to a DataFrame for Plotly Express
-zeros_df = zeros_per_column.reset_index()
-zeros_df.columns = ['Features', 'Number of Zeros']
-
 num_rows = len(df.axes[0])
 
 age_counts = df_new['Age'].value_counts().sort_index()
@@ -152,7 +160,7 @@ age_counts = df_new['Age'].value_counts().sort_index()
 df['Outcome'] = df['Outcome'].astype('category')
 
 # Create the custom color scale for heatmap\matrix
-custom_colorscale = px.colors.make_colorscale(['#0081A7', '#F07167'])
+custom_colorscale = px.colors.make_colorscale(['#0081A7', '#c7e8f3', '#F07167', '#FCD757'])
 
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -170,9 +178,6 @@ fig2 = px.scatter(df_new, x=initial_x, y=initial_y, title='Scatter-chart',
 fig3 = px.box(df_new, x=initial_x, title='Number of pregnancies',
               color_discrete_sequence=['#0081A7', '#F07167'])
 
-fig4 = px.bar(zeros_df, x='Features', y='Number of Zeros', title='Number of Zeros per Feature',
-              color_discrete_sequence=['#0081A7', '#F07167'])
-
 fig5 = px.violin(df, x="Outcome", y="Age", color="Outcome", box=True, points="all",
                  title="Age Distribution by Diabetes Outcome",
                  color_discrete_sequence=['#0081A7', '#F07167'])
@@ -188,6 +193,34 @@ fig7.update_layout(showlegend=False)
 fig7.update_traces(textinfo='none')
 fig7.add_annotation(text=f"<b>{percentage:.1f}%</b>", x=0.5, y=0.5, font=dict(size=28, family="Arial",
                     color="black"), showarrow=False)
+
+fig8 = px.imshow(
+    df_pivot,
+    labels=dict(x="Class", y="Metric", color="Score"),
+    x=df_report.index,
+    y=['precision', 'recall', 'f1-score'],
+    color_continuous_scale = custom_colorscale,
+    title='Classification Report Heatmap with Numbers'
+)
+
+# Add annotations (numbers) to the heatmap
+for i in range(len(df_pivot.index)):
+    for j in range(len(df_pivot.columns)):
+        text = str(round(df_pivot.iloc[i, j], 2))  # Round numbers for display
+        fig8.add_annotation(
+            text=text,
+            x=df_pivot.columns[j],  # x-coordinate (class name)
+            y=df_pivot.index[i],      # y-coordinate (metric)
+            showarrow=False,  # Hide the arrow
+            font=dict(color="black", size=10, weight='bold'),
+        )
+
+fig8.update_layout(
+    xaxis_title="Class",
+    yaxis_title="Metric",
+    coloraxis_showscale=False
+
+)
 
 dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if not df_new.empty else []
 
@@ -323,14 +356,9 @@ html.Div(className="container-fluid", children=[
          html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                 dbc.CardBody(children=[
-                                html.H5("Logistic Regression model Performance Summary",
-                                        className="card-title"),
-                                html.Pre(class_report, style={"height": "100%", "padding-top": "40px",
-                                                              "padding-left": "30px", 'text-indent': '10px',
-                                                              'font-size': '80%', 'font-weight': 'bold'})
+                    dcc.Graph(figure=fig8),
                 ])
-            ], style={"height": "100%", "padding-top": "30px", "padding-left": "20px", 'text-indent': '60px',
-                      'font-size': '20px', 'font-weight': 'bold'})
+            ], style={"height": "100%"})
          ]),
             html.Div(className="col-md-3", children=[
                 dbc.Card(children=[
