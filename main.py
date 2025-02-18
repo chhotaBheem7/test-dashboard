@@ -108,12 +108,7 @@ df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
 report = classification_report(y_test, y_pred, output_dict=True)
 df_report = pd.DataFrame(report).transpose()
 df_report = df_report.drop('accuracy', axis=0)
-df_melted = df_report.reset_index().melt(
-    id_vars=['index'],
-    value_vars=['precision', 'recall', 'f1-score'],
-    var_name='metric',
-    value_name='value'
-)
+df_report.insert(0, '', ["No diabetes", "Diabetes", "Macro avg", "Weighted avg"])
 
 percentage = accuracy * 100
 remaining = 100 - percentage
@@ -144,13 +139,6 @@ outcome_counts['Outcome'] = outcome_counts['Outcome'].astype(str)
 
 df_new = df.drop('PatientID', axis=1)
 
-# Count zeros per column
-zeros_per_column = (df_new == 0).sum()
-
-# Convert the Series to a DataFrame for Plotly Express
-zeros_df = zeros_per_column.reset_index()
-zeros_df.columns = ['Features', 'Number of Zeros']
-
 num_rows = len(df.axes[0])
 
 age_counts = df_new['Age'].value_counts().sort_index()
@@ -174,9 +162,6 @@ fig2 = px.scatter(df_new, x=initial_x, y=initial_y, title='Scatter-chart',
                   color_discrete_sequence=['#0081A7', '#F07167'])
 
 fig3 = px.box(df_new, x=initial_x, title='Number of pregnancies',
-              color_discrete_sequence=['#0081A7', '#F07167'])
-
-fig4 = px.bar(zeros_df, x='Features', y='Number of Zeros', title='Number of Zeros per Feature',
               color_discrete_sequence=['#0081A7', '#F07167'])
 
 fig5 = px.violin(df, x="Outcome", y="Age", color="Outcome", box=True, points="all",
