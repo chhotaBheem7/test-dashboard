@@ -1,0 +1,14 @@
+/* assets/style.css */
+.table-bordered {
+    border-color: lightslategray;
+}
+
+.table th {
+    background-color: #0081A7;
+    color: white;
+}
+
+.table-bordered th, .table-bordered td {
+    border: 1px solid lightskyblue;
+    text-indent: 10px;
+}

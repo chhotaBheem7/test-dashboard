@@ -99,30 +99,21 @@ y_pred = model.predict(X_test)
 # Evaluate the model
 accuracy = accuracy_score(y_test, y_pred)
 
-# Classification Report (precision, recall, F1-score)
-class_report = classification_report(y_test, y_pred)
-
 # Calculate the confusion matrix
 cm = confusion_matrix(y_test, y_pred)
-
 class_names = np.unique(y_test)  # Or specify manually
-
 df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
 
+# Classification Report (precision, recall, F1-score)
 report = classification_report(y_test, y_pred, output_dict=True)
-
 df_report = pd.DataFrame(report).transpose()
 df_report = df_report.drop('accuracy', axis=0)
-
 df_melted = df_report.reset_index().melt(
     id_vars=['index'],
     value_vars=['precision', 'recall', 'f1-score'],
     var_name='metric',
     value_name='value'
 )
-
-# Pivot the DataFrame for the heatmap
-df_pivot = df_melted.pivot(index='metric', columns='index', values='value')
 
 percentage = accuracy * 100
 remaining = 100 - percentage
@@ -153,6 +144,13 @@ outcome_counts['Outcome'] = outcome_counts['Outcome'].astype(str)
 
 df_new = df.drop('PatientID', axis=1)
 
+# Count zeros per column
+zeros_per_column = (df_new == 0).sum()
+
+# Convert the Series to a DataFrame for Plotly Express
+zeros_df = zeros_per_column.reset_index()
+zeros_df.columns = ['Features', 'Number of Zeros']
+
 num_rows = len(df.axes[0])
 
 age_counts = df_new['Age'].value_counts().sort_index()
@@ -160,7 +158,7 @@ age_counts = df_new['Age'].value_counts().sort_index()
 df['Outcome'] = df['Outcome'].astype('category')
 
 # Create the custom color scale for heatmap\matrix
-custom_colorscale = px.colors.make_colorscale(['#0081A7', '#c7e8f3', '#F07167', '#f2c57c'])
+custom_colorscale = px.colors.make_colorscale(['#0081A7', '#F07167'])
 
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -178,6 +176,9 @@ fig2 = px.scatter(df_new, x=initial_x, y=initial_y, title='Scatter-chart',
 fig3 = px.box(df_new, x=initial_x, title='Number of pregnancies',
               color_discrete_sequence=['#0081A7', '#F07167'])
 
+fig4 = px.bar(zeros_df, x='Features', y='Number of Zeros', title='Number of Zeros per Feature',
+              color_discrete_sequence=['#0081A7', '#F07167'])
+
 fig5 = px.violin(df, x="Outcome", y="Age", color="Outcome", box=True, points="all",
                  title="Age Distribution by Diabetes Outcome",
                  color_discrete_sequence=['#0081A7', '#F07167'])
@@ -193,34 +194,6 @@ fig7.update_layout(showlegend=False)
 fig7.update_traces(textinfo='none')
 fig7.add_annotation(text=f"<b>{percentage:.1f}%</b>", x=0.5, y=0.5, font=dict(size=28, family="Arial",
                     color="black"), showarrow=False)
-
-fig8 = px.imshow(
-    df_pivot,
-    labels=dict(x="Class", y="Metric", color="Score"),
-    x=df_report.index,
-    y=['precision', 'recall', 'f1-score'],
-    color_continuous_scale=custom_colorscale,
-    title='Classification Report'
-)
-
-# Add annotations (numbers) to the heatmap
-for i in range(len(df_pivot.index)):
-    for j in range(len(df_pivot.columns)):
-        text = str(round(df_pivot.iloc[i, j], 2))  # Round numbers for display
-        fig8.add_annotation(
-            text=text,
-            x=df_pivot.columns[j],  # x-coordinate (class name)
-            y=df_pivot.index[i],      # y-coordinate (metric)
-            showarrow=False,  # Hide the arrow
-            font=dict(color="black", size=10, weight='bold'),
-        )
-
-fig8.update_layout(
-    xaxis_title="Class",
-    yaxis_title="Metric",
-    coloraxis_showscale=False
-
-)
 
 dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if not df_new.empty else []
 
@@ -356,51 +329,14 @@ html.Div(className="container-fluid", children=[
          html.Div(className="col-md-3", children=[
             dbc.Card(children=[
                 dbc.CardBody(children=[
-                    dcc.Graph(figure=fig8),
+                  html.H5("Classification report"),
+                  html.Br(),
+                  dbc.Table.from_dataframe(df_report.round(2),  class_name="table table-bordered")
                 ])
-            ], style={"height": "100%"})
+            ], style={"height": "100%", "padding-top": "30px", "padding-left": "6px",
+                      'font-size': '16px', 'font-weight': 'bold'})
          ]),
-            html.Div(className="col-md-3", children=[
-                dbc.Card(children=[
-                   dbc.CardBody(children=[
-                       html.H5("Diabetes risk factors", style={"margin-top": "22px"}),
-                       dbc.Form([
-                           dbc.Row([  # Row for inputs
-                               dbc.Col(dbc.CardGroup([
-                                   dbc.Label("Age", html_for="Age", className="form-label fw-bold"),
-                                   dcc.Input(type="text", id="Age", className="form-control input-with-border",
-                                             placeholder="Age"),
-                               ]), width=4),  # Adjust width as needed
-                               dbc.Col(dbc.CardGroup([
-                                   dbc.Label("BMI", html_for="BMI", className="form-label fw-bold"),
-                                   dcc.Input(type="text", id="BMI", className="form-control input-with-border",
-                                             placeholder="BMI"),
-                               ]), width=4),  # Adjust width as needed
-                               dbc.Col(dbc.CardGroup([
-                                   dbc.Label("Glucose level", html_for="Glucose", className="form-label fw-bold"),
-                                   dcc.Input(type="text", id="Glucose", className="form-control input-with-border",
-                                             placeholder="Glucose level"),
-                               ]), width=4),  # Adjust width as needed
-                           ]),
-                           dbc.Button("Submit", color="secondary", id="submit-button", n_clicks=0, className="mt-3"),
-                           # Button below, mt-3 adds margin
-                       ]),
-                     dbc.Card(children=[
-                      dbc.CardBody(children=[
-                         html.Div(className="card-body", children=[
-                             html.H5("Diabetes Risk Prediction", style={"margin-top": "20px"}),
-                             html.P("A score of 0: Low risk.",
-                                    style={"font-weight": "bold", "font-size": "16px"}),
-                             html.P("A score of 1 suggests further evaluation",
-                                    style={"font-weight": "bold", "font-size": "16px"}),
-                             html.Br(),
-                         ]),
-                         html.Div(id="output-text", style={"font-weight": "bold", "font-size": "70px", "text-align": "center"}),  # To display output
-                     ])
-                   ], style={"height": "100%", "margin-left": "10px", "margin-top": "50px"})
-                ]),
-                ]),
-            ]),
+# This is where the last card was placed
              ], style={"height": "100%"})
         ]),
 ], style={"padding-bottom": "10px"})
@@ -433,22 +369,22 @@ def update_scatter_chart(x_value, y_value):
     return {}
 
 
-# Callback to calculate the probability for patient to have diabetes
-@app.callback(
-    Output("output-text", "children"),  # Output to the output area
-    Input("submit-button", "n_clicks"),  # Triggered by button clicks
-    State("Age", "value"),  # Get current values of inputs
-    State("BMI", "value"),
-    State("Glucose", "value"),
-)
-def update_output(n_clicks, age, bmi, glucose):
-    if n_clicks > 0:  # Only update on button click
-        new_data = np.array([[age, bmi, glucose]])
-        new_data_scaled = scaler.transform(new_data)
-        prediction = model.predict(new_data_scaled)
-        output_text = (f"{prediction}")
-        return output_text
-    return ""  # Return empty string initially
+# # Callback to calculate the probability for patient to have diabetes
+# @app.callback(
+#     Output("output-text", "children"),  # Output to the output area
+#     Input("submit-button", "n_clicks"),  # Triggered by button clicks
+#     State("Age", "value"),  # Get current values of inputs
+#     State("BMI", "value"),
+#     State("Glucose", "value"),
+# )
+# def update_output(n_clicks, age, bmi, glucose):
+#     if n_clicks > 0:  # Only update on button click
+#         new_data = np.array([[age, bmi, glucose]])
+#         new_data_scaled = scaler.transform(new_data)
+#         prediction = model.predict(new_data_scaled)
+#         output_text = (f"{prediction}")
+#         return output_text
+#     return ""  # Return empty string initially
 
 
 if __name__ == '__main__':
