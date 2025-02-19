@@ -317,6 +317,7 @@ html.Div(className="container-fluid", children=[
              html.Div( className="col-md-3", children=[
                  dbc.Card( children=[
                      dbc.CardBody( children=[
+                         html.Br(),
                          html.H5( "Classification report" ),
                          html.Br(),
                          dbc.Table.from_dataframe( df_report.round( 2 ),
