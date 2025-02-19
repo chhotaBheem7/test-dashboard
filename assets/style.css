@@ -24,3 +24,9 @@
         font-size: 12px;
     }
 }
+.classification {
+    color: Red;
+    font-family: Arial, sans-serif;
+    font-size: 50px;
+    font-weight: bold;
+  }

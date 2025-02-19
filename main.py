@@ -56,7 +56,7 @@ finally:
 
 
 # Logistic Regression Model - Separate features (X) and target (y)
-feature_names = ['Glucose', 'BMI', 'Age', 'Pregnancies', 'DiabetesPedigreeFunction', 'Insulin']
+feature_names = ['Glucose', 'BMI', 'Age', 'Pregnancies', 'DiabetesPedigreeFunction', 'Insulin'],
 X = df[feature_names].values  # All features included in the model
 y = df.iloc[:, -1].values   # The last feature (target)
 
@@ -332,7 +332,6 @@ html.Div(className="container-fluid", children=[
                          html.H5( "Diabetes Prediction" ),  # More descriptive heading
                          html.Br(),
                          html.Br(),
-                         html.Div( id="output-text", style={'font-size': '50px'} ),
                          dbc.Form( [
                              dbc.Row( [
                                  dbc.Col(
@@ -358,10 +357,13 @@ html.Div(className="container-fluid", children=[
                              dbc.Button( "Submit", color="primary", className="btn btn-primary btn-lg btn-block",
                                          id="submit-button" ),
                          ] ),
-                         html.Div( id='prediction-output', style={'margin-top': '10px', 'font-weight': 'bold'} ),
+                         html.Br(),
+                         html.Br(),
+                         html.Div( id='prediction-output', style={'margin-top': '10px', 'margin-left': "20px", 'font-weight': 'bold', 'font-size': '40px'} ),
                          # Output area for prediction
-                         html.Div( id='error-message', style={'color': 'red', 'margin-top': '5px'} )
+                         html.Div( id='error-message', style={'color': 'red', 'margin-top': '5px'} ),
                          # Error message area
+                         html.Div( id="output-text", style={'font-size': '50px'} ),
                      ] )
                  ], style={"height": "100%"} )
              ] ),
