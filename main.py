@@ -56,7 +56,7 @@ finally:
 
 
 # Logistic Regression Model - Separate features (X) and target (y)
-feature_names = ['Glucose', 'BMI', 'Age']
+feature_names = ['Glucose', 'BMI', 'Age', 'Pregnancies', 'DiabetesPedigreeFunction', 'Insulin']
 X = df[feature_names].values  # All features included in the model
 y = df.iloc[:, -1].values   # The last feature (target)
 
@@ -92,6 +92,9 @@ else:
     pickle.dump(model, outfile)
     # Close the pickle file.
     outfile.close()
+
+# Renaming one column
+df = df.rename(columns={'DiabetesPedigreeFunction': 'DPF'})
 
 # Make predictions on the test set
 y_pred = model.predict(X_test)
@@ -324,8 +327,11 @@ html.Div(className="container-fluid", children=[
              html.Div( className="col-md-3", children=[
                  dbc.Card( children=[
                      dbc.CardBody( children=[
+                         html.Br(),
                          html.H5( "Diabetes Prediction" ),  # More descriptive heading
                          html.Br(),
+                         html.Br(),
+                         html.Div( id="output-text", style={'font-size': '50px'} ),
                          dbc.Form( [
                              dbc.Row( [
                                  dbc.Col(
@@ -368,30 +374,29 @@ html.Div(className="container-fluid", children=[
     Input( 'x-axis-dropdown1', 'value' )
 )
 def update_boxplot(x_value):
-    if x_value and not df.empty:  # Check if x_value is not None/empty AND df is not empty
+    if x_value and not df.empty and x_value in df.columns:  # Check if column exists
         fig = px.box( df, x=x_value, color_discrete_sequence=['#0081A7', '#F07167'] )
-        fig.update_layout( title=f"{x_value}" )  # Set title dynamically
+        fig.update_layout( title=f"{x_value}" )
         return fig
-    return {}  # Return an empty figure if no valid x_value or df is empty
+    return px.box( df ) if not df.empty else {}  # Return empty or default plot
 
 
-# Callback to update the scatter plot
 @app.callback(
     Output( 'scatter-chart', 'figure' ),
     Input( 'x-axis-dropdown2', 'value' ),
     Input( 'y-axis-dropdown2', 'value' )
 )
 def update_scatter_chart(x_value, y_value):
-    if x_value and y_value and not df.empty:
+    if x_value and y_value and not df.empty and x_value in df.columns and y_value in df.columns:
         fig = px.scatter( df, x=x_value, y=y_value, color_discrete_sequence=['#0081A7', '#F07167'] )
         fig.update_layout( title=f"{x_value} vs {y_value}" )
         return fig
-    return {}
+    return px.scatter( df ) if not df.empty else {}  # Return empty or default plot
 
 
 @app.callback(
-    Output( 'prediction-output', 'children' ),  # Output for prediction
-    Output( 'error-message', 'children' ),  # Output for errors
+    Output( 'prediction-output', 'children' ),
+    Output( 'error-message', 'children' ),
     Input( 'submit-button', 'n_clicks' ),
     State( 'Age', 'value' ),
     State( 'BMI', 'value' ),
@@ -406,51 +411,36 @@ def update_prediction(n_clicks, age, bmi, glucose, pregnancies, dpf, insulin):
 
     error_message = ""
     try:
-        age = float( age ) if age else None  # Convert to float, handle empty/None
-        bmi = float( bmi ) if bmi else None
-        glucose = float( glucose ) if glucose else None
-        pregnancies = int( pregnancies ) if pregnancies else None  # Convert to int
-        dpf = float( dpf ) if dpf else None
-        insulin = float( insulin ) if insulin else None
-
-        if any( x is None for x in [age, bmi, glucose] ):
-            error_message = "Age, BMI, and Glucose are required."
+        # Improved input validation and conversion
+        try:
+            age = float( age ) if age is not None else None
+            bmi = float( bmi ) if bmi is not None else None
+            glucose = float( glucose ) if glucose is not None else None
+            pregnancies = int( pregnancies ) if pregnancies is not None else None
+            dpf = float( dpf ) if dpf is not None else None
+            insulin = float( insulin ) if insulin is not None else None
+        except ValueError:
+            error_message = "Invalid input. Please enter numbers only."
             return "", error_message
 
-        if any( not re.match( r'^[-+]?\d*\.?\d+$', str( x ) ) for x in [age, bmi, glucose, pregnancies, dpf, insulin] if
-                x is not None ):
-            error_message = "All input values must be numbers (integer or decimal)."
+        required_fields = {"Age": age, "BMI": bmi, "Glucose": glucose, 'Pregnancies': pregnancies, 'DPF': dpf,
+                           'Insulin': insulin}
+        missing_fields = [field for field, value in required_fields.items() if value is None]
+        if missing_fields:
+            error_message = f"The following fields are required: {', '.join( missing_fields )}."
             return "", error_message
 
-        # Create input array (handle missing values with a placeholder like -1)
-        new_data = np.array( [[glucose, bmi, age]] )  # Correct order of features
+        # Consistent feature order – VERY IMPORTANT!
+        new_data = np.array( [[glucose, bmi, age, pregnancies, dpf, insulin]] )  # Correct order
         new_data_scaled = scaler.transform( new_data )
-        prediction = model.predict( new_data_scaled )[0]  # Get the actual prediction value
+        prediction = model.predict( new_data_scaled )[0]
 
-        output_text = f"Prediction: {'Diabetes' if prediction == 1 else 'No Diabetes'}"
+        output_text = f"Prediction: {'Diabetes, ' if prediction == 1 else 'No Diabetes'}"
         return output_text, ""
 
-    except ValueError:
-        error_message = "Invalid input. Please enter numbers only."
+    except Exception as e:  # Catching a broader exception can be useful for debugging
+        error_message = f"An error occurred: {str( e )}"  # More informative error message
         return "", error_message
-
-
-# # Callback to calculate if patient might have diabetes
-# @app.callback(
-#     Output("output-text", "children"),  # Output to the output area
-#     Input("submit-button", "n_clicks"),  # Triggered by button clicks
-#     State("Age", "value"),  # Get current values of inputs
-#     State("BMI", "value"),
-#     State("Glucose", "value"),
-# )
-# def update_output(n_clicks, age, bmi, glucose):
-#     if n_clicks > 0:  # Only update on button click
-#         new_data = np.array([[age, bmi, glucose]])
-#         new_data_scaled = scaler.transform(new_data)
-#         prediction = model.predict(new_data_scaled)
-#         output_text = (f"{prediction}")
-#         return output_text
-#     return ""  # Return empty string initially
 
 
 if __name__ == '__main__':
