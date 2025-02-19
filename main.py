@@ -314,99 +314,98 @@ html.Div(className="container-fluid", children=[
                 ])
                    ], style={"height": "100%"})
          ]),
-             html.Div( className="col-md-3", children=[
-                 dbc.Card( children=[
-                     dbc.CardBody( children=[
+             html.Div(className="col-md-3", children=[
+                 dbc.Card(children=[
+                     dbc.CardBody(children=[
+                         # dcc.Graph(figure=fig4),
                          html.Br(),
-                         html.H5( "Classification report" ),
+                         html.H5("Classification report"),
                          html.Br(),
-                         dbc.Table.from_dataframe( df_report.round( 2 ),
-                                                   class_name="table table-bordered table-responsive" )
-                     ] )
-                 ], style={"height": "100%", "margin": "0 auto"} )
+                         dbc.Table.from_dataframe(df_report.round(2), class_name="table table-bordered table-responsive")
+                     ])
+                 ], style={"height": "100%", "margin": "0 auto"})
              ] ),
-             html.Div( className="col-md-3", children=[
-                 dbc.Card( children=[
-                     dbc.CardBody( children=[
-                         html.Br(),
-                         html.H5( "Diabetes Prediction" ),  # More descriptive heading
-                         html.Br(),
-                         html.Br(),
-                         dbc.Form( [
-                             dbc.Row( [
-                                 dbc.Col(
-                                     dcc.Input( id="Age", type="text", className="form-control", placeholder="Age" ),
-                                     className="col" ),
-                                 dbc.Col(
-                                     dcc.Input( id="BMI", type="text", className="form-control", placeholder="BMI" ),
-                                     className="col" ),
-                                 dbc.Col( dcc.Input( id="Glucose", type="text", className="form-control",
-                                                     placeholder="Glucose" ), className="col" ),
-                             ] ),
-                             html.Br(),
-                             dbc.Row( [
-                                 dbc.Col( dcc.Input( id="Pregnancies", type="text", className="form-control",
-                                                     placeholder="Pregnancies" ), className="col" ),
-                                 dbc.Col(
-                                     dcc.Input( id="DPF", type="text", className="form-control", placeholder="DPF" ),
-                                     className="col" ),
-                                 dbc.Col( dcc.Input( id="Insulin", type="text", className="form-control",
-                                                     placeholder="Insulin" ), className="col" ),
-                             ] ),
-                             html.Br(),
-                             dbc.Button( "Submit", color="primary", className="btn btn-primary btn-lg btn-block",
-                                         id="submit-button" ),
-                         ] ),
-                         html.Br(),
-                         html.Br(),
-                         html.Div( id='prediction-output', style={'margin-top': '10px', 'margin-left': "20px", 'font-weight': 'bold', 'font-size': '40px'} ),
-                         # Output area for prediction
-                         html.Div( id='error-message', style={'color': 'red', 'margin-top': '5px'} ),
-                         # Error message area
-                         html.Div( id="output-text"),
-                     ] )
-                 ], style={"height": "100%"} )
-             ] ),
-         ], style={"padding-bottom": "10px"} )
-] ),
-] ),
+    html.Div(className="col-md-3", children=[
+        dbc.Card(children=[
+            dbc.CardBody(children=[
+                    html.Br(),
+                    html.H5( "Diabetes Prediction" ),  # More descriptive heading
+                    html.Br(),
+                    html.Br(),
+                    dbc.Form( [
+                        dbc.Row( [
+                            dbc.Col(
+                                dcc.Input( id="Age", type="text", className="form-control", placeholder="Age" ),
+                                className="col" ),
+                            dbc.Col(
+                                dcc.Input( id="BMI", type="text", className="form-control", placeholder="BMI" ),
+                                className="col" ),
+                            dbc.Col( dcc.Input( id="Glucose", type="text", className="form-control",
+                                                placeholder="Glucose" ), className="col" ),
+                        ] ),
+                        html.Br(),
+                        dbc.Row( [
+                            dbc.Col( dcc.Input( id="Pregnancies", type="text", className="form-control",
+                                                placeholder="Pregnancies" ), className="col" ),
+                            dbc.Col(
+                                dcc.Input( id="DPF", type="text", className="form-control", placeholder="DPF" ),
+                                className="col" ),
+                            dbc.Col( dcc.Input( id="Insulin", type="text", className="form-control",
+                                                placeholder="Insulin" ), className="col" ),
+                        ] ),
+                        html.Br(),
+                        dbc.Button( "Submit", color="primary", className="btn btn-primary btn-lg btn-block",
+                                    id="submit-button" ),
+                    ] ),
+                    html.Br(),
+                    html.Br(),
+                    html.Div( id='prediction-output', style={'margin-top': '10px', 'margin-left': "20px", 'font-weight': 'bold', 'font-size': '40px'}),
+                    # Output area for prediction
+                    html.Div( id='error-message', style={'color': 'red', 'margin-top': '5px'} ),
+                    # Error message area
+                    html.Div(id="output-text"),
+                    html.Br(),
+            ])
+        ], style={"height": "100%"})
+    ]),
+], style={"padding-bottom": "10px"})
+]),
+]),
 
 
 @app.callback(
-    Output( 'boxplot', 'figure' ),
-    Input( 'x-axis-dropdown1', 'value' )
+    Output('boxplot', 'figure'),
+    Input('x-axis-dropdown1', 'value')
 )
 def update_boxplot(x_value):
     if x_value and not df.empty and x_value in df.columns:  # Check if column exists
-        fig = px.box( df, x=x_value, color_discrete_sequence=['#0081A7', '#F07167'] )
-        fig.update_layout( title=f"{x_value}" )
+        fig = px.box(df, x=x_value, color_discrete_sequence=['#0081A7', '#F07167'])
+        fig.update_layout(title=f"{x_value}")
         return fig
-    return px.box( df ) if not df.empty else {}  # Return empty or default plot
-
+    return px.box(df) if not df.empty else {} # Return empty or default plot
 
 @app.callback(
-    Output( 'scatter-chart', 'figure' ),
-    Input( 'x-axis-dropdown2', 'value' ),
-    Input( 'y-axis-dropdown2', 'value' )
+    Output('scatter-chart', 'figure'),
+    Input('x-axis-dropdown2', 'value'),
+    Input('y-axis-dropdown2', 'value')
 )
 def update_scatter_chart(x_value, y_value):
     if x_value and y_value and not df.empty and x_value in df.columns and y_value in df.columns:
-        fig = px.scatter( df, x=x_value, y=y_value, color_discrete_sequence=['#0081A7', '#F07167'] )
-        fig.update_layout( title=f"{x_value} vs {y_value}" )
+        fig = px.scatter(df, x=x_value, y=y_value, color_discrete_sequence=['#0081A7', '#F07167'])
+        fig.update_layout(title=f"{x_value} vs {y_value}")
         return fig
-    return px.scatter( df ) if not df.empty else {}  # Return empty or default plot
-
+    return px.scatter(df) if not df.empty else {} # Return empty or default plot
 
 @app.callback(
-    Output( 'prediction-output', 'children' ),
-    Output( 'error-message', 'children' ),
-    Input( 'submit-button', 'n_clicks' ),
-    State( 'Age', 'value' ),
-    State( 'BMI', 'value' ),
-    State( 'Glucose', 'value' ),
-    State( 'Pregnancies', 'value' ),
-    State( 'DPF', 'value' ),
-    State( 'Insulin', 'value' )
+    Output('prediction-output', 'children'),
+    Output('error-message', 'children'),
+    Input('submit-button', 'n_clicks'),
+    State('Age', 'value'),
+    State('BMI', 'value'),
+    State('Glucose', 'value'),
+    State('Pregnancies', 'value'),
+    State('DPF', 'value'),
+    State('Insulin', 'value')
 )
 def update_prediction(n_clicks, age, bmi, glucose, pregnancies, dpf, insulin):
     if n_clicks is None:
