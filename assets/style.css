@@ -1,14 +1,26 @@
-/* assets/style.css */
-.table-bordered {
-    border-color: lightslategray;
-}
-
 .table th {
     background-color: #0081A7;
     color: white;
+    overflow-x: auto;
+    font-size: 16px;
+    font-weight: bold;
 }
 
 .table-bordered th, .table-bordered td {
     border: 1px solid lightskyblue;
     text-indent: 10px;
+    padding: 8px;
+    overflow-x: auto;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+@media (max-width: 1920px) {
+    .table th {
+        font-size: 12px;
+    }
+
+    .table-bordered th, .table-bordered td {
+        font-size: 12px;
+    }
 }

@@ -311,50 +311,131 @@ html.Div(className="container-fluid", children=[
                 ])
                    ], style={"height": "100%"})
          ]),
-         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
-                dbc.CardBody(children=[
-                  html.H5("Classification report"),
-                  html.Br(),
-                  dbc.Table.from_dataframe(df_report.round(2),  class_name="table table-bordered")
-                ])
-            ], style={"height": "100%", "padding-top": "30px", "padding-left": "6px",
-                      'font-size': '16px', 'font-weight': 'bold'})
-         ]),
-# This is where the last card was placed
-             ], style={"height": "100%"})
-        ]),
-], style={"padding-bottom": "10px"})
+             html.Div( className="col-md-3", children=[
+                 dbc.Card( children=[
+                     dbc.CardBody( children=[
+                         html.H5( "Classification report" ),
+                         html.Br(),
+                         dbc.Table.from_dataframe( df_report.round( 2 ),
+                                                   class_name="table table-bordered table-responsive" )
+                     ] )
+                 ], style={"height": "100%", "margin": "0 auto"} )
+             ] ),
+             html.Div( className="col-md-3", children=[
+                 dbc.Card( children=[
+                     dbc.CardBody( children=[
+                         html.H5( "Diabetes Prediction" ),  # More descriptive heading
+                         html.Br(),
+                         dbc.Form( [
+                             dbc.Row( [
+                                 dbc.Col(
+                                     dcc.Input( id="Age", type="text", className="form-control", placeholder="Age" ),
+                                     className="col" ),
+                                 dbc.Col(
+                                     dcc.Input( id="BMI", type="text", className="form-control", placeholder="BMI" ),
+                                     className="col" ),
+                                 dbc.Col( dcc.Input( id="Glucose", type="text", className="form-control",
+                                                     placeholder="Glucose" ), className="col" ),
+                             ] ),
+                             html.Br(),
+                             dbc.Row( [
+                                 dbc.Col( dcc.Input( id="Pregnancies", type="text", className="form-control",
+                                                     placeholder="Pregnancies" ), className="col" ),
+                                 dbc.Col(
+                                     dcc.Input( id="DPF", type="text", className="form-control", placeholder="DPF" ),
+                                     className="col" ),
+                                 dbc.Col( dcc.Input( id="Insulin", type="text", className="form-control",
+                                                     placeholder="Insulin" ), className="col" ),
+                             ] ),
+                             html.Br(),
+                             dbc.Button( "Submit", color="primary", className="btn btn-primary btn-lg btn-block",
+                                         id="submit-button" ),
+                         ] ),
+                         html.Div( id='prediction-output', style={'margin-top': '10px', 'font-weight': 'bold'} ),
+                         # Output area for prediction
+                         html.Div( id='error-message', style={'color': 'red', 'margin-top': '5px'} )
+                         # Error message area
+                     ] )
+                 ], style={"height": "100%"} )
+             ] ),
+         ], style={"padding-bottom": "10px"} )
+] ),
+] ),
 
 
-# Callback to update the scatter boxplot
 @app.callback(
-    Output('boxplot', 'figure'),
-    Input('x-axis-dropdown1', 'value')
+    Output( 'boxplot', 'figure' ),
+    Input( 'x-axis-dropdown1', 'value' )
 )
 def update_boxplot(x_value):
-    if x_value and not df.empty:
-        fig = px.box(df, x=x_value, color_discrete_sequence=['#0081A7', '#F07167'])
-        fig.update_layout(title=f"{x_value}")
+    if x_value and not df.empty:  # Check if x_value is not None/empty AND df is not empty
+        fig = px.box( df, x=x_value, color_discrete_sequence=['#0081A7', '#F07167'] )
+        fig.update_layout( title=f"{x_value}" )  # Set title dynamically
         return fig
-    return {}
+    return {}  # Return an empty figure if no valid x_value or df is empty
 
 
 # Callback to update the scatter plot
 @app.callback(
-    Output('scatter-chart', 'figure'),
-    Input('x-axis-dropdown2', 'value'),
-    Input('y-axis-dropdown2', 'value')
+    Output( 'scatter-chart', 'figure' ),
+    Input( 'x-axis-dropdown2', 'value' ),
+    Input( 'y-axis-dropdown2', 'value' )
 )
 def update_scatter_chart(x_value, y_value):
     if x_value and y_value and not df.empty:
-        fig = px.scatter(df, x=x_value, y=y_value, color_discrete_sequence=['#0081A7', '#F07167'])
-        fig.update_layout(title=f"{x_value} vs {y_value}")
+        fig = px.scatter( df, x=x_value, y=y_value, color_discrete_sequence=['#0081A7', '#F07167'] )
+        fig.update_layout( title=f"{x_value} vs {y_value}" )
         return fig
     return {}
 
 
-# # Callback to calculate the probability for patient to have diabetes
+@app.callback(
+    Output( 'prediction-output', 'children' ),  # Output for prediction
+    Output( 'error-message', 'children' ),  # Output for errors
+    Input( 'submit-button', 'n_clicks' ),
+    State( 'Age', 'value' ),
+    State( 'BMI', 'value' ),
+    State( 'Glucose', 'value' ),
+    State( 'Pregnancies', 'value' ),
+    State( 'DPF', 'value' ),
+    State( 'Insulin', 'value' )
+)
+def update_prediction(n_clicks, age, bmi, glucose, pregnancies, dpf, insulin):
+    if n_clicks is None:
+        return "", ""
+
+    error_message = ""
+    try:
+        age = float( age ) if age else None  # Convert to float, handle empty/None
+        bmi = float( bmi ) if bmi else None
+        glucose = float( glucose ) if glucose else None
+        pregnancies = int( pregnancies ) if pregnancies else None  # Convert to int
+        dpf = float( dpf ) if dpf else None
+        insulin = float( insulin ) if insulin else None
+
+        if any( x is None for x in [age, bmi, glucose] ):
+            error_message = "Age, BMI, and Glucose are required."
+            return "", error_message
+
+        if any( not re.match( r'^[-+]?\d*\.?\d+$', str( x ) ) for x in [age, bmi, glucose, pregnancies, dpf, insulin] if
+                x is not None ):
+            error_message = "All input values must be numbers (integer or decimal)."
+            return "", error_message
+
+        # Create input array (handle missing values with a placeholder like -1)
+        new_data = np.array( [[glucose, bmi, age]] )  # Correct order of features
+        new_data_scaled = scaler.transform( new_data )
+        prediction = model.predict( new_data_scaled )[0]  # Get the actual prediction value
+
+        output_text = f"Prediction: {'Diabetes' if prediction == 1 else 'No Diabetes'}"
+        return output_text, ""
+
+    except ValueError:
+        error_message = "Invalid input. Please enter numbers only."
+        return "", error_message
+
+
+# # Callback to calculate if patient might have diabetes
 # @app.callback(
 #     Output("output-text", "children"),  # Output to the output area
 #     Input("submit-button", "n_clicks"),  # Triggered by button clicks
