@@ -363,7 +363,7 @@ html.Div(className="container-fluid", children=[
                          # Output area for prediction
                          html.Div( id='error-message', style={'color': 'red', 'margin-top': '5px'} ),
                          # Error message area
-                         html.Div( id="output-text", style={'font-size': '50px'} ),
+                         html.Div( id="output-text"),
                      ] )
                  ], style={"height": "100%"} )
              ] ),
@@ -416,29 +416,28 @@ def update_prediction(n_clicks, age, bmi, glucose, pregnancies, dpf, insulin):
     try:
         # Improved input validation and conversion
         try:
-            age = float( age ) if age is not None else None
-            bmi = float( bmi ) if bmi is not None else None
-            glucose = float( glucose ) if glucose is not None else None
-            pregnancies = int( pregnancies ) if pregnancies is not None else None
-            dpf = float( dpf ) if dpf is not None else None
-            insulin = float( insulin ) if insulin is not None else None
+            age = float(age) if age is not None else None
+            bmi = float(bmi) if bmi is not None else None
+            glucose = float(glucose) if glucose is not None else None
+            pregnancies = int(pregnancies) if pregnancies is not None else None
+            dpf = float(dpf) if dpf is not None else None
+            insulin = float(insulin) if insulin is not None else None
         except ValueError:
             error_message = "Invalid input. Please enter numbers only."
             return "", error_message
 
-        required_fields = {"Age": age, "BMI": bmi, "Glucose": glucose, 'Pregnancies': pregnancies, 'DPF': dpf,
-                           'Insulin': insulin}
+        required_fields = {"Age": age, "BMI": bmi, "Glucose": glucose, 'Pregnancies': pregnancies, 'DPF': dpf, 'Insulin': insulin}
         missing_fields = [field for field, value in required_fields.items() if value is None]
         if missing_fields:
-            error_message = f"The following fields are required: {', '.join( missing_fields )}."
+            error_message = f"The following fields are required: {', '.join(missing_fields)}."
             return "", error_message
 
         # Consistent feature order – VERY IMPORTANT!
-        new_data = np.array( [[glucose, bmi, age, pregnancies, dpf, insulin]] )  # Correct order
-        new_data_scaled = scaler.transform( new_data )
-        prediction = model.predict( new_data_scaled )[0]
+        new_data = np.array([[glucose, bmi, age, pregnancies, dpf, insulin]])  # Correct order
+        new_data_scaled = scaler.transform(new_data)
+        prediction = model.predict(new_data_scaled)[0]
 
-        output_text = f"Prediction: {'Diabetes, ' if prediction == 1 else 'No Diabetes'}"
+        output_text = f"Prediction: {'Diabetes' if prediction == 1 else 'No Diabetes'}"
         return output_text, ""
 
     except Exception as e:  # Catching a broader exception can be useful for debugging
