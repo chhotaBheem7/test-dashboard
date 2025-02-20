@@ -13,9 +13,24 @@
     color: white;
 }
 
+.table td {
+    background-color: #ea9993;
+    color: darkslategray;
+}
+
+table tr:nth-child(odd) td {
+  background-color: #F07167;
+}
+
 @media (max-width: 992px) {
     .table th, .table-bordered th, .table-bordered td {
         font-size: 8px;
+    }
+}
+
+@media (max-width: 1280px) {
+    .table th, .table-bordered th, .table-bordered td {
+        font-size: 10px;
     }
 }
 
@@ -24,3 +39,5 @@
         font-size: 12px;
     }
 }
+
+

@@ -185,10 +185,20 @@ fig7.add_annotation(text=f"<b>{percentage:.1f}%</b>", x=0.5, y=0.5, font=dict(si
 
 dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if not df_new.empty else []
 
-app.layout = html.Div(children=[
-html.Div(className="container-fluid", children=[
-    html.H1(children="Pima Indian Diabetes Data Analysis and Prediction Dashboard", className="p-5 rounded-lg shadow",
-            style={"background-color": '#0092BA', "margin-bottom": "20px", "color": "white"}),
+app.layout = html.Div(className="container-fluid", children=[
+    html.Div(
+        className="d-flex justify-content-between align-items-center p-5 rounded-md shadow",
+        style={"background-color": '#F07167', "margin-bottom": "10px", "color": "white"},
+        children=[
+            html.H1(children="Pima Indian Diabetes Data Analysis and Prediction Dashboard"),
+            html.Img(
+                src="/assets/Blue_circle_for_diabetes.svg.png",
+                alt="The blue circle is the global symbol for diabetes, introduced by the International Diabetes Federation",
+                title="The blue circle is the global symbol for diabetes, introduced by the International Diabetes Federation",
+                style={"max-height": "100px", "width": "auto", "margin-right": "75px"}
+            ),
+        ]
+    ),
         html.Div(className="row card-container",  children=[
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
@@ -317,7 +327,6 @@ html.Div(className="container-fluid", children=[
              html.Div(className="col-md-3", children=[
                  dbc.Card(children=[
                      dbc.CardBody(children=[
-                         # dcc.Graph(figure=fig4),
                          html.Br(),
                          html.H5("Classification report"),
                          html.Br(),
@@ -331,6 +340,7 @@ html.Div(className="container-fluid", children=[
                     html.Br(),
                     html.H5( "Diabetes Prediction" ),  # More descriptive heading
                     html.Br(),
+                    html.Div( id='prediction-output', style={'margin-top': '10px', 'margin-left': "20px", 'font-weight': 'bold', 'font-size': '30px'}),
                     html.Br(),
                     dbc.Form( [
                         dbc.Row( [
@@ -358,18 +368,14 @@ html.Div(className="container-fluid", children=[
                                     id="submit-button" ),
                     ] ),
                     html.Br(),
-                    html.Br(),
-                    html.Div( id='prediction-output', style={'margin-top': '10px', 'margin-left': "20px", 'font-weight': 'bold', 'font-size': '40px'}),
                     # Output area for prediction
                     html.Div( id='error-message', style={'color': 'red', 'margin-top': '5px'} ),
                     # Error message area
                     html.Div(id="output-text"),
-                    html.Br(),
             ])
-        ], style={"height": "100%"})
+        ], style={"height": "100%", "margin": "0 auto"})
     ]),
 ], style={"padding-bottom": "10px"})
-]),
 ]),
 
 
