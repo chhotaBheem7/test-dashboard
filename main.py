@@ -185,17 +185,76 @@ fig7.add_annotation(text=f"<b>{percentage:.1f}%</b>", x=0.5, y=0.5, font=dict(si
 
 dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if not df_new.empty else []
 
+# Initialize Dash app
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+# Initial figures and dropdown options (handle empty DataFrame)
+initial_x = df_new.columns[0] if not df_new.empty and len(df_new.columns) > 0 else None
+initial_y = df_new.columns[1] if not df_new.empty and len(df_new.columns) > 1 else None
+
+fig1 = px.pie(outcome_counts, names='Outcome', values='Count',
+              color="Outcome", color_discrete_sequence=['#0081A7', '#F07167'])
+
+fig2 = px.scatter(df_new, x=initial_x, y=initial_y,
+                  color_discrete_sequence=['#0081A7', '#F07167'])
+
+fig3 = px.box(df_new, x=initial_x,
+              color_discrete_sequence=['#0081A7', '#F07167'])
+
+fig5 = px.violin(df, x="Outcome", y="Age", color="Outcome", box=True, points="all",
+                 color_discrete_sequence=['#0081A7', '#F07167'])
+
+fig6 = px.imshow(df_cm, labels=dict(x="Predicted", y="Actual", color="Count"), x=df_cm.columns, y=df_cm.index,
+                 color_continuous_scale=custom_colorscale, text_auto=True)
+fig6.update_layout(xaxis_title="Predicted", yaxis_title="Actual", xaxis=dict(tickangle=-45),
+                   yaxis=dict(tickangle=0), coloraxis_showscale=False)
+
+fig7 = px.pie(fig7_accuracy, values='Value', names='Category',
+              color_discrete_sequence=['#0081A7', '#F07167'], hole=0.6)
+fig7.update_layout(showlegend=False)
+fig7.update_traces(textinfo='none')
+fig7.add_annotation(text=f"<b>{percentage:.2f}%</b>", x=0.5, y=0.5, font=dict(size=28, family="Arial",
+                    color="black"), showarrow=False)
+
+#  Plot ROC curve using Plotly Express
+#  fig4 = px.line(df_roc, x='FPR', y='TPR', title='Receiver Operating Characteristic')
+#  fig4.add_shape(
+#      type="line",
+#      x0=0,
+#     y0=0,
+#      x1=1,
+#     y1=1,
+#    line=dict(color="navy", width=2, dash="dash"),
+#  )
+#
+# fig4.update_layout(
+#     xaxis_title='False Positive Rate',
+#     yaxis_title='True Positive Rate',
+#     xaxis=dict(range=[0, 1]),
+#     yaxis=dict(range=[0, 1.05]),
+#     annotations=[
+#         dict(
+#             x=0.95,  # Adjust position as needed
+#             y=0.05,  # Adjust position as needed
+#             text=f'ROC curve (area = {roc_auc:.2f})',
+#             showarrow=False,
+#         )
+#     ],
+# )
+
+dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if not df_new.empty else []
+
 app.layout = html.Div(className="container-fluid", children=[
     html.Div(
         className="d-flex justify-content-between align-items-center p-5 rounded-md shadow",
-        style={"background-color": '#F07167', "margin-bottom": "10px", "color": "white"},
+        style={"background-color": '#F07167', "height": "10em", "margin-bottom": "10px", "color": "white", "border-radius": "0.5rem"},
         children=[
             html.H1(children="Pima Indian Diabetes Data Analysis and Prediction Dashboard"),
             html.Img(
                 src="/assets/Blue_circle_for_diabetes.svg.png",
                 alt="The blue circle is the global symbol for diabetes, introduced by the International Diabetes Federation",
                 title="The blue circle is the global symbol for diabetes, introduced by the International Diabetes Federation",
-                style={"max-height": "100px", "width": "auto", "margin-right": "75px"}
+                style={"max-height": "125px", "width": "auto", "margin-right": "75px"}
             ),
         ]
     ),
@@ -262,7 +321,7 @@ app.layout = html.Div(className="container-fluid", children=[
 
     html.Div(className="row card-container", children=[
         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
+            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=['Binary Feature Outcome']),
                 dbc.CardBody(children=[
                     dcc.Graph(figure=fig1),
                     html.P(f"Number of Data Points: {num_rows}", className="card-text", style={'text-align': 'center'}),
@@ -270,14 +329,14 @@ app.layout = html.Div(className="container-fluid", children=[
             ], style={"height": "100%"})
         ]),
         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
+            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Age Distribution by Diabetes Outcome"]),
                 dbc.CardBody(children=[
                     dcc.Graph(figure=fig5),
                 ])
             ], style={"height": "100%"})
         ]),
         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
+            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Relationship Between Variables"]),
                 dbc.CardBody(children=[
                     dcc.Graph(id='scatter-chart', figure=fig2),
                     dcc.Dropdown(
@@ -296,7 +355,7 @@ app.layout = html.Div(className="container-fluid", children=[
             ], style={"height": "100%"})
         ]),
         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
+            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Number of pregnancies"]),
                 dbc.CardBody(children=[
                     dcc.Graph(id='boxplot', figure=fig3),
                     dcc.Dropdown(
@@ -311,24 +370,24 @@ app.layout = html.Div(className="container-fluid", children=[
     ], style={"padding-bottom": "10px"}),
          html.Div(className="row card-container", children=[
          html.Div(className="col-md-3", children=[
-                dbc.Card(children=[
+                dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Confusion Matrix"]),
                  dbc.CardBody(children=[
                     dcc.Graph(figure=fig6),
                 ])
                    ], style={"height": "100%"})
         ]),
          html.Div(className="col-md-3", children=[
-            dbc.Card(children=[
+            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Accuracy of the model"]),
                 dbc.CardBody(children=[
                     dcc.Graph(figure=fig7),
                 ])
                    ], style={"height": "100%"})
          ]),
              html.Div(className="col-md-3", children=[
-                 dbc.Card(children=[
+                 dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Classification report"]),
                      dbc.CardBody(children=[
                          html.Br(),
-                         html.H5("Classification report"),
+                         html.Br(),
                          html.Br(),
                          dbc.Table.from_dataframe(df_report.round(2), class_name="table table-bordered table-responsive")
                      ])
@@ -336,11 +395,12 @@ app.layout = html.Div(className="container-fluid", children=[
              ] ),
     html.Div(className="col-md-3", children=[
         dbc.Card(children=[
+            html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Pima Diabetes Predictor"]),
             dbc.CardBody(children=[
                     html.Br(),
-                    html.H5( "Diabetes Prediction" ),  # More descriptive heading
                     html.Br(),
                     html.Div( id='prediction-output', style={'margin-top': '10px', 'margin-left': "20px", 'font-weight': 'bold', 'font-size': '30px'}),
+                    html.Br(),
                     html.Br(),
                     dbc.Form( [
                         dbc.Row( [
