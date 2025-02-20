@@ -56,7 +56,7 @@ finally:
 
 
 # Logistic Regression Model - Separate features (X) and target (y)
-feature_names = ['Glucose', 'BMI', 'Age', 'Pregnancies', 'DiabetesPedigreeFunction', 'Insulin'],
+feature_names = ['Glucose', 'BMI', 'Age', 'Pregnancies', 'DiabetesPedigreeFunction', 'Insulin']
 X = df[feature_names].values  # All features included in the model
 y = df.iloc[:, -1].values   # The last feature (target)
 
