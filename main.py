@@ -154,9 +154,6 @@ df['Outcome'] = df['Outcome'].astype('category')
 # Get predicted probabilities for the positive class
 y_scores = model.predict_proba(X_test)[:, 1]
 
-# Create a Pandas DataFrame for Plotly Express
-df_roc = pd.DataFrame({'FPR': fpr, 'TPR': tpr})
-
 # Create the custom color scale for heatmap\matrix
 custom_colorscale = px.colors.make_colorscale(['#0081A7', '#F07167'])
 
