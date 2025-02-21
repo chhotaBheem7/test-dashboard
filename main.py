@@ -551,7 +551,7 @@ def update_or_clear_inputs(submit_n_clicks, clear_n_clicks, *args):
         try:
             new_data_scaled = scaler.transform(new_data)  # Make sure 'scaler' is defined and fitted
             prediction = model.predict(new_data_scaled)[0]  # Make sure 'model' is defined and loaded
-            if prediction == 0:
+            if prediction == 1:
                 prediction_output = "Diabetic"
             else:
                 prediction_output = "Non-Diabetic"
