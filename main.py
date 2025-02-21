@@ -104,7 +104,7 @@ accuracy = accuracy_score(y_test, y_pred)
 
 # Calculate the confusion matrix
 cm = confusion_matrix(y_test, y_pred)
-class_names = np.unique(y_test)  # Or specify manually
+class_names = np.unique(y_test)
 df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
 
 # Classification Report (precision, recall, F1-score)
@@ -140,7 +140,10 @@ outcome_counts = df['Outcome'].value_counts().reset_index()
 outcome_counts.columns = ['Outcome', 'Count']
 outcome_counts['Outcome'] = outcome_counts['Outcome'].astype(str)
 
-df_new = df.drop('PatientID', axis=1)
+try:
+    df_new = df.drop('PatientID', axis=1)
+except KeyError:  # Handle the case where 'PatientID' is not present
+    df_new = df.copy()
 
 num_rows = len(df.axes[0])
 
@@ -148,116 +151,81 @@ age_counts = df_new['Age'].value_counts().sort_index()
 
 df['Outcome'] = df['Outcome'].astype('category')
 
+# Get predicted probabilities for the positive class
+y_scores = model.predict_proba(X_test)[:, 1]
+
+# Calculate ROC curve and AUC
+fpr, tpr, thresholds = roc_curve(y_test, y_scores)
+roc_auc = auc(fpr, tpr)
+
+# Create a Pandas DataFrame for Plotly Express
+df_roc = pd.DataFrame({'FPR': fpr, 'TPR': tpr})
+
 # Create the custom color scale for heatmap\matrix
 custom_colorscale = px.colors.make_colorscale(['#0081A7', '#F07167'])
 
-# Initialize Dash app
+def safe_convert_inputs(input_dict: dict) -> (dict, str):
+    safe_dict = {}
+    error_message = ""
+    for key, value in input_dict.items():
+        if value is None or value == "":  # Handle empty strings
+            safe_dict[key] = None
+            continue
+        try:
+            if key == 'Pregnancies':
+                safe_dict[key] = int(value)
+            else:
+                safe_dict[key] = float(value)
+        except ValueError:
+            error_message = "Invalid input. Please enter numbers only."
+            break
+    return safe_dict, error_message
+
+# Dash app initialization
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# Initial figures and dropdown options (handle empty DataFrame)
-initial_x = df_new.columns[0] if not df_new.empty and len(df_new.columns) > 0 else None
-initial_y = df_new.columns[1] if not df_new.empty and len(df_new.columns) > 1 else None
+# Initialize dropdown options (handle empty DataFrame)
+available_columns = df_new.columns.tolist() if not df_new.empty else []
+dropdown_options = [{'label': col, 'value': col} for col in available_columns]
 
-fig1 = px.pie(outcome_counts, names='Outcome', values='Count', title='Binary Feature Outcome',
-              color="Outcome", color_discrete_sequence=['#0081A7', '#F07167'])
+initial_x = available_columns[0] if available_columns else None  # Default x
+initial_y = available_columns[1] if len(available_columns) > 1 else None  # Default y
 
-fig2 = px.scatter(df_new, x=initial_x, y=initial_y, title='Scatter-chart',
-                  color_discrete_sequence=['#0081A7', '#F07167'])
+# Create initial figures (empty or default if no data)
+fig1 = px.pie(outcome_counts, names='Outcome', values='Count', color="Outcome", color_discrete_sequence=['#0081A7', '#F07167']) if not df.empty else {}
+fig2 = px.scatter(df_new, x=initial_x, y=initial_y, color_discrete_sequence=['#0081A7', '#F07167']) if not df_new.empty else {}
+fig3 = px.box(df_new, x=initial_x, color_discrete_sequence=['#0081A7', '#F07167']) if not df_new.empty else {}
+fig5 = px.violin(df_new, x="Outcome", y=initial_y, color="Outcome", box=True, points="all", color_discrete_sequence=['#0081A7', '#F07167']) if not df_new.empty else {}
+fig6 = px.imshow(df_cm, labels=dict(x="Predicted", y="Actual", color="Count"), x=df_cm.columns, y=df_cm.index, color_continuous_scale=custom_colorscale, text_auto=True) if not df_cm.empty else {}
+fig7 = px.pie(fig7_accuracy, values='Value', names='Category', color_discrete_sequence=['#0081A7', '#F07167'], hole=0.6) if fig7_accuracy else {}
+if fig7:
+    fig7.update_layout(showlegend=False)
+    fig7.update_traces(textinfo='none')
+    fig7.add_annotation(text=f"<b>{percentage:.2f}%</b>", x=0.5, y=0.5, font=dict(size=26, family="Arial", color="black"), showarrow=False)
 
-fig3 = px.box(df_new, x=initial_x, title='Number of pregnancies',
-              color_discrete_sequence=['#0081A7', '#F07167'])
-
-fig5 = px.violin(df, x="Outcome", y="Age", color="Outcome", box=True, points="all",
-                 title="Age Distribution by Diabetes Outcome",
-                 color_discrete_sequence=['#0081A7', '#F07167'])
-
-fig6 = px.imshow(df_cm, labels=dict(x="Predicted", y="Actual", color="Count"), x=df_cm.columns, y=df_cm.index,
-                 color_continuous_scale=custom_colorscale, text_auto=True)
-fig6.update_layout(title="Confusion Matrix", xaxis_title="Predicted", yaxis_title="Actual", xaxis=dict(tickangle=-45),
-                   yaxis=dict(tickangle=0), coloraxis_showscale=False)
-
-fig7 = px.pie(fig7_accuracy, values='Value', names='Category', title=f'Accuracy',
-              color_discrete_sequence=['#0081A7', '#F07167'], hole=0.6)
-fig7.update_layout(showlegend=False)
-fig7.update_traces(textinfo='none')
-fig7.add_annotation(text=f"<b>{percentage:.1f}%</b>", x=0.5, y=0.5, font=dict(size=28, family="Arial",
-                    color="black"), showarrow=False)
-
-dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if not df_new.empty else []
-
-# Initialize Dash app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
-# Initial figures and dropdown options (handle empty DataFrame)
-initial_x = df_new.columns[0] if not df_new.empty and len(df_new.columns) > 0 else None
-initial_y = df_new.columns[1] if not df_new.empty and len(df_new.columns) > 1 else None
-
-fig1 = px.pie(outcome_counts, names='Outcome', values='Count',
-              color="Outcome", color_discrete_sequence=['#0081A7', '#F07167'])
-
-fig2 = px.scatter(df_new, x=initial_x, y=initial_y,
-                  color_discrete_sequence=['#0081A7', '#F07167'])
-
-fig3 = px.box(df_new, x=initial_x,
-              color_discrete_sequence=['#0081A7', '#F07167'])
-
-fig5 = px.violin(df, x="Outcome", y="Age", color="Outcome", box=True, points="all",
-                 color_discrete_sequence=['#0081A7', '#F07167'])
-
-fig6 = px.imshow(df_cm, labels=dict(x="Predicted", y="Actual", color="Count"), x=df_cm.columns, y=df_cm.index,
-                 color_continuous_scale=custom_colorscale, text_auto=True)
-fig6.update_layout(xaxis_title="Predicted", yaxis_title="Actual", xaxis=dict(tickangle=-45),
-                   yaxis=dict(tickangle=0), coloraxis_showscale=False)
-
-fig7 = px.pie(fig7_accuracy, values='Value', names='Category',
-              color_discrete_sequence=['#0081A7', '#F07167'], hole=0.6)
-fig7.update_layout(showlegend=False)
-fig7.update_traces(textinfo='none')
-fig7.add_annotation(text=f"<b>{percentage:.2f}%</b>", x=0.5, y=0.5, font=dict(size=28, family="Arial",
-                    color="black"), showarrow=False)
-
-#  Plot ROC curve using Plotly Express
-#  fig4 = px.line(df_roc, x='FPR', y='TPR', title='Receiver Operating Characteristic')
-#  fig4.add_shape(
-#      type="line",
-#      x0=0,
-#     y0=0,
-#      x1=1,
-#     y1=1,
-#    line=dict(color="navy", width=2, dash="dash"),
-#  )
-#
-# fig4.update_layout(
-#     xaxis_title='False Positive Rate',
-#     yaxis_title='True Positive Rate',
-#     xaxis=dict(range=[0, 1]),
-#     yaxis=dict(range=[0, 1.05]),
-#     annotations=[
-#         dict(
-#             x=0.95,  # Adjust position as needed
-#             y=0.05,  # Adjust position as needed
-#             text=f'ROC curve (area = {roc_auc:.2f})',
-#             showarrow=False,
-#         )
-#     ],
-# )
-
-dropdown_options = [{'label': col, 'value': col} for col in df_new.columns] if not df_new.empty else []
-
-app.layout = html.Div(className="container-fluid", children=[
-    html.Div(
-        className="d-flex justify-content-between align-items-center p-5 rounded-md shadow",
-        style={"background-color": '#F07167', "height": "10em", "margin-bottom": "10px", "color": "white", "border-radius": "0.5rem"},
-        children=[
-            html.H1(children="Pima Indian Diabetes Data Analysis and Prediction Dashboard"),
-            html.Img(
-                src="/assets/Blue_circle_for_diabetes.svg.png",
-                alt="The blue circle is the global symbol for diabetes, introduced by the International Diabetes Federation",
-                title="The blue circle is the global symbol for diabetes, introduced by the International Diabetes Federation",
-                style={"max-height": "125px", "width": "auto", "margin-right": "75px"}
-            ),
-        ]
+app.layout = html.Div(style={'backgroundColor': 'white'}, className="container-fluid", children=[
+html.Div([
+    dbc.Navbar(
+        dbc.Container(
+            [
+                html.A(
+                    "Pima Indian Diabetes Data Analysis and Prediction Dashboard", className="navbar-brand px-3 fw-bold fs-4 Sticky top", href="https://en.wikipedia.org/wiki/Akimel_O%27odham"
+                ),
+                dbc.Nav(
+                    [
+                        dbc.NavItem(dbc.NavLink( "What Is Diabetes?", href="https://www.niddk.nih.gov/health-information/diabetes")),
+                        dbc.NavItem(dbc.NavLink( "Source: Pima Indians Diabetes Database", href="https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database" )),
+                    ],
+                    className="ml-auto",  # Align to the right
+                ),
+            ],
+fluid=True,  # Make the container fluid to use up full width
+            className="px-3" # Add padding to the container
+        ),
+        className="my-custom-navbar",
     ),
+    html.Div(id="content", style={"margin-top": "10px"}),  # Prevent overlap
+]),
         html.Div(className="row card-container",  children=[
             html.Div(className="col-md-2", children=[
                 dbc.Card(children=[
@@ -329,12 +297,20 @@ app.layout = html.Div(className="container-fluid", children=[
             ], style={"height": "100%"})
         ]),
         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Age Distribution by Diabetes Outcome"]),
-                dbc.CardBody(children=[
-                    dcc.Graph(figure=fig5),
-                ])
-            ], style={"height": "100%"})
-        ]),
+            dbc.Card( children=[
+                html.Div( className="card-header", style={"background-color": "#0081A7", "color": "white"},
+                          children=["Predictor Features versus Diabetes Outcome"] ),
+                dbc.CardBody( children=[
+                    dcc.Graph( id='diabetes-distribution-chart' ),
+                    dcc.Dropdown(
+                        id='y-axis-dropdown1',
+                        options=dropdown_options,
+                        value=initial_y,
+                        clearable=False
+                    ),
+                ] )
+            ], style={"height": "100%"} )
+        ] ),
         html.Div(className="col-md-3", children=[
             dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Relationship Between Variables"]),
                 dbc.CardBody(children=[
@@ -359,7 +335,7 @@ app.layout = html.Div(className="container-fluid", children=[
                 dbc.CardBody(children=[
                     dcc.Graph(id='boxplot', figure=fig3),
                     dcc.Dropdown(
-                        id='x-axis-dropdown1',
+                        id='x-axis-dropdown3',
                         options=dropdown_options,
                         value=initial_x,
                         clearable=False
@@ -395,44 +371,86 @@ app.layout = html.Div(className="container-fluid", children=[
              ] ),
     html.Div(className="col-md-3", children=[
         dbc.Card(children=[
-            html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Pima Diabetes Predictor"]),
-            dbc.CardBody(children=[
+            html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=[ "Pima Diabetes Predictor" ]),
+            dbc.CardBody(
+                children=[
+                    html.H5('Diabetes classification: '),
+                    html.Div(
+                        id='prediction_output',
+                        style={
+                            'height': '100px',
+                            'margin-top': '30px',
+                            'margin-left': '20px',
+                            'font-weight': 'bold',
+                            'font-size': '30px'
+                        }
+                    ),
                     html.Br(),
                     html.Br(),
-                    html.Div( id='prediction-output', style={'margin-top': '10px', 'margin-left': "20px", 'font-weight': 'bold', 'font-size': '30px'}),
+                    dbc.Form(
+                        [
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        dcc.Input( id="Age", type="text", className="form-control", placeholder="Age" ),
+                                        className="col",
+                                    ),
+                                    dbc.Col(
+                                        dcc.Input( id="BMI", type="text", className="form-control", placeholder="BMI" ),
+                                        className="col",
+                                    ),
+                                    dbc.Col(
+                                        dcc.Input( id="Glucose", type="text", className="form-control",
+                                                   placeholder="Glucose" ),
+                                        className="col",
+                                    ),
+                                ]
+                            ),
+                            html.Br(),
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        dcc.Input( id="Pregnancies", type="text", className="form-control",
+                                                   placeholder="Pregnancies" ),
+                                        className="col",
+                                    ),
+                                    dbc.Col(
+                                        dcc.Input( id="DPF", type="text", className="form-control", placeholder="DPF" ),
+                                        className="col",
+                                    ),
+                                    dbc.Col(
+                                        dcc.Input( id="Insulin", type="text", className="form-control",
+                                                   placeholder="Insulin" ),
+                                        className="col",
+                                    ),
+                                ]
+                            ),
+                            html.Br(),
+                            dbc.Row( [
+                                dbc.Col(
+                                    dbc.Button(
+                                        "Submit",
+                                        color="primary",
+                                        className="btn btn-primary btn-lg",
+                                        id="submit-button",
+                                    ),
+                                ),
+                                dbc.Col(
+                                    dbc.Button(
+                                        "Clear",
+                                        color="primary",
+                                        className="btn btn-primary btn-lg",
+                                        id="clear-button",
+                                    ),
+                                ),
+                            ] ),
+                        ]
+                    ),
                     html.Br(),
-                    html.Br(),
-                    dbc.Form( [
-                        dbc.Row( [
-                            dbc.Col(
-                                dcc.Input( id="Age", type="text", className="form-control", placeholder="Age" ),
-                                className="col" ),
-                            dbc.Col(
-                                dcc.Input( id="BMI", type="text", className="form-control", placeholder="BMI" ),
-                                className="col" ),
-                            dbc.Col( dcc.Input( id="Glucose", type="text", className="form-control",
-                                                placeholder="Glucose" ), className="col" ),
-                        ] ),
-                        html.Br(),
-                        dbc.Row( [
-                            dbc.Col( dcc.Input( id="Pregnancies", type="text", className="form-control",
-                                                placeholder="Pregnancies" ), className="col" ),
-                            dbc.Col(
-                                dcc.Input( id="DPF", type="text", className="form-control", placeholder="DPF" ),
-                                className="col" ),
-                            dbc.Col( dcc.Input( id="Insulin", type="text", className="form-control",
-                                                placeholder="Insulin" ), className="col" ),
-                        ] ),
-                        html.Br(),
-                        dbc.Button( "Submit", color="primary", className="btn btn-primary btn-lg btn-block",
-                                    id="submit-button" ),
-                    ] ),
-                    html.Br(),
-                    # Output area for prediction
                     html.Div( id='error-message', style={'color': 'red', 'margin-top': '5px'} ),
-                    # Error message area
-                    html.Div(id="output-text"),
-            ])
+                    html.Div( id="output-text" ),
+                ]
+            )
         ], style={"height": "100%", "margin": "0 auto"})
     ]),
 ], style={"padding-bottom": "10px"})
@@ -440,15 +458,39 @@ app.layout = html.Div(className="container-fluid", children=[
 
 
 @app.callback(
-    Output('boxplot', 'figure'),
-    Input('x-axis-dropdown1', 'value')
+    Output( 'boxplot', 'figure',),
+    Input( 'x-axis-dropdown3', 'value' ),
+    prevent_initial_call=True  # add this line
 )
 def update_boxplot(x_value):
     if x_value and not df.empty and x_value in df.columns:  # Check if column exists
-        fig = px.box(df, x=x_value, color_discrete_sequence=['#0081A7', '#F07167'])
-        fig.update_layout(title=f"{x_value}")
+        fig = px.box( df, x=x_value, color_discrete_sequence=['#0081A7', '#F07167'] )
+        fig.update_layout( title=f"{x_value}" )
         return fig
-    return px.box(df) if not df.empty else {} # Return empty or default plot
+    return px.box( df ) if not df.empty else {}  # Return empty or default plot
+
+@app.callback(
+    Output( 'diabetes-distribution-chart', 'figure' ),
+    Input( 'y-axis-dropdown1', 'value' ),
+)
+def update_age_distribution_chart(selected_y):  # Correct: Only selected_y as input
+    fig = px.violin(
+        df_new,  # Use the global df_new DataFrame directly
+        x="Outcome",
+        y=selected_y,
+        color="Outcome",
+        box=True,
+        points="all",  # Consider points="outliers" or False for large datasets
+        color_discrete_sequence=['#0081A7', '#F07167'],
+        title=f"Distribution of {selected_y} by Outcome"  # Add a title
+    )
+
+    fig.update_layout(
+        xaxis_title="Outcome",
+        yaxis_title=selected_y,
+    )
+
+    return fig
 
 @app.callback(
     Output('scatter-chart', 'figure'),
@@ -457,57 +499,78 @@ def update_boxplot(x_value):
 )
 def update_scatter_chart(x_value, y_value):
     if x_value and y_value and not df.empty and x_value in df.columns and y_value in df.columns:
-        fig = px.scatter(df, x=x_value, y=y_value, color_discrete_sequence=['#0081A7', '#F07167'])
+        fig = px.scatter(df_new, x=x_value, y=y_value, color_discrete_sequence=['#0081A7', '#F07167'])
         fig.update_layout(title=f"{x_value} vs {y_value}")
         return fig
-    return px.scatter(df) if not df.empty else {} # Return empty or default plot
+    return px.scatter(df_new) if not df.empty else {} # Return empty or default plot
+
+
+outputs = [Output('Age', 'value'),
+           Output('BMI', 'value'),
+           Output('Glucose', 'value'),
+           Output('Pregnancies', 'value'),
+           Output('DPF', 'value'),
+           Output('Insulin', 'value'),
+           Output('prediction_output', 'children'),
+           Output('error-message', 'children')]  # Define outputs ONCE
 
 @app.callback(
-    Output('prediction-output', 'children'),
-    Output('error-message', 'children'),
-    Input('submit-button', 'n_clicks'),
-    State('Age', 'value'),
-    State('BMI', 'value'),
-    State('Glucose', 'value'),
-    State('Pregnancies', 'value'),
-    State('DPF', 'value'),
-    State('Insulin', 'value')
+    outputs,
+    [Input('submit-button', 'n_clicks'), Input('clear-button', 'n_clicks')],
+    [State(field, 'value') for field in ['Age', 'BMI', 'Glucose', 'Pregnancies', 'DPF', 'Insulin']]
 )
-def update_prediction(n_clicks, age, bmi, glucose, pregnancies, dpf, insulin):
-    if n_clicks is None:
-        return "", ""
+def update_or_clear_inputs(submit_n_clicks, clear_n_clicks, *args):
+    ctx = callback_context
 
-    error_message = ""
-    try:
-        # Improved input validation and conversion
-        try:
-            age = float(age) if age is not None else None
-            bmi = float(bmi) if bmi is not None else None
-            glucose = float(glucose) if glucose is not None else None
-            pregnancies = int(pregnancies) if pregnancies is not None else None
-            dpf = float(dpf) if dpf is not None else None
-            insulin = float(insulin) if insulin is not None else None
-        except ValueError:
-            error_message = "Invalid input. Please enter numbers only."
-            return "", error_message
+    if not ctx.triggered:  # Initial load
+        return ['', '', '', '', '', '', "", ""]  # Return empty strings for all outputs
 
-        required_fields = {"Age": age, "BMI": bmi, "Glucose": glucose, 'Pregnancies': pregnancies, 'DPF': dpf, 'Insulin': insulin}
-        missing_fields = [field for field, value in required_fields.items() if value is None]
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_id == 'clear-button':
+        return ['', '', '', '', '', '', "", ""]  # Clear all input fields and messages
+
+    elif triggered_id == 'submit-button':
+        if submit_n_clicks is None:  # Handle initial state when button hasn't been clicked
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update # No updates
+
+        required_fields = ['Age', 'BMI', 'Glucose', 'Pregnancies', 'DPF', 'Insulin']
+        input_dict = dict(zip(required_fields, args))
+        safe_input_dict, error_message = safe_convert_inputs(input_dict)  # Assuming this function handles conversions and basic validation
+
+        if error_message:
+            return *args, "", error_message  # Return input values, empty prediction, and the error
+
+        missing_fields = [field for field, value in safe_input_dict.items() if value is None or value == ""]
         if missing_fields:
             error_message = f"The following fields are required: {', '.join(missing_fields)}."
-            return "", error_message
+            return *args, "", error_message  # Return inputs, empty prediction, and error
 
-        # Consistent feature order – VERY IMPORTANT!
-        new_data = np.array([[glucose, bmi, age, pregnancies, dpf, insulin]])  # Correct order
-        new_data_scaled = scaler.transform(new_data)
-        prediction = model.predict(new_data_scaled)[0]
+        all_none = all(value is None for value in safe_input_dict.values())
+        if all_none:
+            error_message = "All input values are missing or invalid."
+            return *args, "", error_message # Return inputs, empty prediction, and error
 
-        output_text = f"Prediction: {'Diabetes' if prediction == 1 else 'No Diabetes'}"
-        return output_text, ""
+        new_data = np.array([[safe_input_dict[field] for field in required_fields]])
 
-    except Exception as e:  # Catching a broader exception can be useful for debugging
-        error_message = f"An error occurred: {str( e )}"  # More informative error message
-        return "", error_message
+        try:
+            new_data_scaled = scaler.transform(new_data)  # Make sure 'scaler' is defined and fitted
+            prediction = model.predict(new_data_scaled)[0]  # Make sure 'model' is defined and loaded
+            if prediction == 0:
+                prediction_output = "Diabetic"
+            else:
+                prediction_output = "Non-Diabetic"
+            return *args, prediction_output, ""  # Return inputs, prediction, and empty error message
+
+        except ValueError as e:
+            error_message = f"Scaling Error: {e}. Check input values and data types."
+            return *args, "", error_message  # Return inputs, empty prediction, and the error
+        except AttributeError as e:  # Catch potential AttributeError if scaler not fitted
+            error_message = f"Error: {e}. Please make sure the model and scaler are correctly loaded and fitted."
+            return *args, "", error_message # Return inputs, empty prediction, and the error
+        except Exception as e: # Catch any other exceptions
+            error_message = f"A prediction error occurred: {e}"
+            return *args, "", error_message # Return inputs, empty prediction, and the error
 
 
 if __name__ == '__main__':

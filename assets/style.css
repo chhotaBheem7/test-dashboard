@@ -39,5 +39,16 @@ table tr:nth-child(odd) td {
         font-size: 12px;
     }
 }
-
+.my-custom-navbar {
+    background-color: #0081A7 !important;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin-top: 10px;
+}
+.my-custom-navbar .navbar-brand {
+    color: white !important;
+}
+.my-custom-navbar .navbar-nav .nav-link {
+    color: white !important;
+}
 
