@@ -190,6 +190,7 @@ fig2 = px.scatter(df_new, x=initial_x, y=initial_y, color_discrete_sequence=['#0
 fig3 = px.box(df_new, x=initial_x, color_discrete_sequence=['#0081A7', '#F07167']) if not df_new.empty else {}
 fig5 = px.violin(df_new, x="Outcome", y=initial_y, color="Outcome", box=True, points="all", color_discrete_sequence=['#0081A7', '#F07167']) if not df_new.empty else {}
 fig6 = px.imshow(df_cm, labels=dict(x="Predicted", y="Actual", color="Count"), x=df_cm.columns, y=df_cm.index, color_continuous_scale=custom_colorscale, text_auto=True) if not df_cm.empty else {}
+fig6.update_layout(coloraxis_showscale=False)
 fig7 = px.pie(fig7_accuracy, values='Value', names='Category', color_discrete_sequence=['#0081A7', '#F07167'], hole=0.6) if fig7_accuracy else {}
 if fig7:
     fig7.update_layout(showlegend=False)
@@ -202,7 +203,7 @@ html.Div([
         dbc.Container(
             [
                 html.A(
-                    "Pima Indian Diabetes Data Analysis and Prediction Dashboard", className="navbar-brand px-3 fw-bold fs-4 Sticky top", href="https://en.wikipedia.org/wiki/Akimel_O%27odham"
+                    "Pima Diabetes Dashboard", className="navbar-brand px-3 fw-bold fs-4 Sticky top", href="https://en.wikipedia.org/wiki/Akimel_O%27odham"
                 ),
                 dbc.Nav(
                     [
@@ -367,7 +368,7 @@ fluid=True,  # Make the container fluid to use up full width
             html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=[ "Pima Diabetes Predictor" ]),
             dbc.CardBody(
                 children=[
-                    html.H5('Diabetes classification: '),
+                    html.H4('Diabetes classification: '),
                     html.Div(
                         id='prediction_output',
                         style={
@@ -379,6 +380,7 @@ fluid=True,  # Make the container fluid to use up full width
                         }
                     ),
                     html.Br(),
+                    html.H5('Enter values in all fields below: '),
                     html.Br(),
                     dbc.Form(
                         [
