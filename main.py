@@ -154,10 +154,6 @@ df['Outcome'] = df['Outcome'].astype('category')
 # Get predicted probabilities for the positive class
 y_scores = model.predict_proba(X_test)[:, 1]
 
-# Calculate ROC curve and AUC
-fpr, tpr, thresholds = roc_curve(y_test, y_scores)
-roc_auc = auc(fpr, tpr)
-
 # Create a Pandas DataFrame for Plotly Express
 df_roc = pd.DataFrame({'FPR': fpr, 'TPR': tpr})
 
