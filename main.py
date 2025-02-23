@@ -203,20 +203,13 @@ html.Div([
         dbc.Container(
             [
                 html.A(
-                    "Pima Diabetes Dashboard", className="navbar-brand px-3 fw-bold fs-4 Sticky top", href="https://en.wikipedia.org/wiki/Akimel_O%27odham"
-                ),
-                dbc.Nav(
-                    [
-                        dbc.NavItem(dbc.NavLink( "What Is Diabetes?", href="https://www.niddk.nih.gov/health-information/diabetes")),
-                        dbc.NavItem(dbc.NavLink( "Source: Pima Indians Diabetes Database", href="https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database" )),
-                    ],
-                    className="ml-auto",  # Align to the right
+                    "Pima Diabetes Dashboard", className="navbar-brand_top px-3 fw-bold fs-4 Sticky top my-link my-link:hover", href="https://en.wikipedia.org/wiki/Akimel_O%27odham"
                 ),
             ],
 fluid=True,  # Make the container fluid to use up full width
             className="px-3" # Add padding to the container
         ),
-        className="my-custom-navbar",
+        className="my-custom-navbar_top",
     ),
     html.Div(id="content", style={"margin-top": "10px"}),  # Prevent overlap
 ]),
@@ -447,8 +440,21 @@ fluid=True,  # Make the container fluid to use up full width
                 ]
             )
         ], style={"height": "100%", "margin": "0 auto"})
+    ], style={"padding-bottom": "10px"} ),
     ]),
-], style={"padding-bottom": "10px"})
+
+    html.Div( [
+        dbc.Navbar(
+            dbc.Container(
+                [
+                ],
+                fluid=True,  # Make the container fluid to use up full width
+                className="px-3"  # Add padding to the container
+            ),
+            className="my-custom-navbar_bottom",
+        ),
+        html.Div( id="content", style={"margin-bottom": "10px"} ),  # Prevent overlap
+    ])
 ]),
 
 
