@@ -211,7 +211,7 @@ fluid=True,  # Make the container fluid to use up full width
         ),
         className="my-custom-navbar_top",
     ),
-    html.Div(id="content", style={"margin-top": "10px"}),  # Prevent overlap
+    html.Div(id="content-top", style={"margin-top": "10px"}),  # Prevent overlap
 ]),
         html.Div(className="row card-container",  children=[
             html.Div(className="col-md-2", children=[
@@ -276,7 +276,7 @@ fluid=True,  # Make the container fluid to use up full width
 
     html.Div(className="row card-container", children=[
         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=['Binary Feature Outcome']),
+            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=['Predicted Feature Outcome']),
                 dbc.CardBody(children=[
                     dcc.Graph(figure=fig1),
                     html.P(f"Number of Data Points: {num_rows}", className="card-text", style={'text-align': 'center'}),
@@ -286,7 +286,7 @@ fluid=True,  # Make the container fluid to use up full width
         html.Div(className="col-md-3", children=[
             dbc.Card( children=[
                 html.Div( className="card-header", style={"background-color": "#0081A7", "color": "white"},
-                          children=["Predictor Features versus Diabetes Outcome"] ),
+                          children=["Predictors versus Outcome"] ),
                 dbc.CardBody( children=[
                     dcc.Graph( id='diabetes-distribution-chart' ),
                     dcc.Dropdown(
@@ -299,7 +299,7 @@ fluid=True,  # Make the container fluid to use up full width
             ], style={"height": "100%"} )
         ] ),
         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Relationship Between Variables"]),
+            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Relationship Between Features"]),
                 dbc.CardBody(children=[
                     dcc.Graph(id='scatter-chart', figure=fig2),
                     dcc.Dropdown(
@@ -318,7 +318,7 @@ fluid=True,  # Make the container fluid to use up full width
             ], style={"height": "100%"})
         ]),
         html.Div(className="col-md-3", children=[
-            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Number of pregnancies"]),
+            dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Predictors Distribution"]),
                 dbc.CardBody(children=[
                     dcc.Graph(id='boxplot', figure=fig3),
                     dcc.Dropdown(
@@ -346,15 +346,19 @@ fluid=True,  # Make the container fluid to use up full width
                 ])
                    ], style={"height": "100%"})
          ]),
-             html.Div(className="col-md-3", children=[
-                 dbc.Card(children=[html.Div(className="card-header", style={"background-color": "#0081A7", "color": "white"}, children=["Classification report"]),
-                     dbc.CardBody(children=[
+             html.Div( className="col-md-3", children=[
+                 dbc.Card( children=[
+                     html.Div( className="card-header", style={"background-color": "#0081A7", "color": "white"},
+                               children=["Classification report"] ),
+                     dbc.CardBody( children=[
                          html.Br(),
                          html.Br(),
                          html.Br(),
-                         dbc.Table.from_dataframe(df_report.round(2), class_name="table table-bordered table-responsive")
-                     ])
-                 ], style={"height": "100%", "margin": "0 auto"})
+                         html.Div( className="table-responsive", children=[  # Apply table-responsive here
+                             dbc.Table.from_dataframe( df_report.round( 2 ), class_name="table table-bordered" )
+                         ] )
+                     ] )
+                 ], style={"height": "100%", "margin": "0 auto"} )
              ] ),
     html.Div(className="col-md-3", children=[
         dbc.Card(children=[
@@ -453,7 +457,7 @@ fluid=True,  # Make the container fluid to use up full width
             ),
             className="my-custom-navbar_bottom",
         ),
-        html.Div( id="content", style={"margin-bottom": "10px"} ),  # Prevent overlap
+        html.Div( id="content-bottom", style={"margin-bottom": "10px"} ),  # Prevent overlap
     ])
 ]),
 
